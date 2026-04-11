@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import Skeleton from "../components/Skeleton";
 
 export default function Users() {
   const [users, setUsers] = useState<any[]>([]);
@@ -25,12 +26,14 @@ export default function Users() {
   }
 
   if (loading) {
-    return <div className="p-6">Loading users...</div>;
-  }
-
-  if (error) {
-    return <div className="p-6 text-red-500">{error}</div>;
-  }
+  return (
+    <div className="p-6">
+      {[...Array(5)].map((_, i) => (
+        <Skeleton key={i} />
+      ))}
+    </div>
+  );
+}
 
   return (
     <div className="p-6">

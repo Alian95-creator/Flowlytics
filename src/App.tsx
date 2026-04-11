@@ -7,6 +7,9 @@ import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import { useAuth } from "./hooks/useAuth";
 import { useOnlineUsers } from "./hooks/useOnlineUsers";
+import Crypto from "./pages/Crypto";
+import Commodity from "./pages/Commodity";
+import Forex from "./pages/Forex";
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -32,6 +35,9 @@ function AppContent() {
             <Route path="/users" element={<Users />} />
             <Route path="/activity" element={<Activity />} />
             <Route path="*" element={<Navigate to="/" />} />
+            <Route path="/crypto" element={<Crypto />} />
+            <Route path="/commodity/:symbol" element={<Commodity />} />
+            <Route path="/forex" element={<Forex />} />
           </Routes>
         </div>
       </div>

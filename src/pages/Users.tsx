@@ -8,52 +8,41 @@ export default function Users() {
     fetchUsers();
 
     const channel = supabase
-      .channel("online-users")
+      .channel("presence")
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "online_users",
-        },
-        () => {
-          fetchUsers();
-        }
+        { event: "*", schema: "public", table: "online_users" },
+        fetchUsers
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => supabase.removeChannel(channel);
   }, []);
 
   async function fetchUsers() {
-    const { data } = await supabase
-      .from("online_users")
-      .select("*")
-      .order("last_active", { ascending: false });
-
+    const { data } = await supabase.from("online_users").select("*");
     if (data) setUsers(data);
+  }
+
+  function getStatus(last_active: string) {
+    const diff = Date.now() - new Date(last_active).getTime();
+    return diff < 15000 ? "Online 🟢" : "Offline ⚫";
   }
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold">Online Users ⚡</h1>
+      <h1 className="text-xl font-bold">Presence System ⚡</h1>
 
-      <div className="bg-white rounded-2xl shadow border">
+      <div className="bg-white rounded shadow">
         {users.map((u) => (
-          <div
-            key={u.id}
-            className="p-4 border-b flex justify-between"
-          >
-            <div>
-              <p className="font-medium">{u.email}</p>
-              <p className="text-sm text-gray-500">
-                Active now
-              </p>
-            </div>
-
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          <div key={u.id} className="p-4 border-b">
+            <p className="font-medium">{u.email}</p>
+            <p className="text-sm text-gray-500">
+              {getStatus(u.last_active)}
+            </p>
+            <p className="text-xs text-gray-400">
+              {u.current_page}
+            </p>
           </div>
         ))}
       </div>

@@ -5,11 +5,18 @@ export default function Sidebar() {
     <div className="w-64 bg-gray-900 text-white min-h-screen p-6">
       <h1 className="text-2xl font-bold mb-8">Flowlytics</h1>
 
-      <nav className="space-y-4">
-        <Link className="block hover:text-blue-400" to="/">
+      <nav className="space-y-3">
+        <Link
+          to="/"
+          className="block px-3 py-2 rounded hover:bg-gray-800 transition"
+        >
           Dashboard
         </Link>
-        <Link className="block hover:text-blue-400" to="/users">
+
+        <Link
+          to="/users"
+          className="block px-3 py-2 rounded hover:bg-gray-800 transition"
+        >
           Users
         </Link>
       </nav>

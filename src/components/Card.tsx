@@ -5,18 +5,23 @@ type Props = {
 };
 
 export default function Card({ title, value, change }: Props) {
-  const isUp = change?.includes("+");
-
   return (
-    <div className="bg-white p-5 rounded-2xl border shadow-sm hover:shadow-md transition">
-      <p className="text-gray-500 text-sm">{title}</p>
+    <div className="bg-white dark:bg-gray-900 dark:text-white p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm transition-all duration-200 hover:scale-[1.02]">
+      
+      <h3 className="text-gray-500 dark:text-gray-400 text-sm">
+        {title}
+      </h3>
 
-      <h2 className="text-3xl font-bold mt-2">{value}</h2>
+      <p className="text-3xl font-bold mt-2">
+        {value}
+      </p>
 
       {change && (
         <p
-          className={`text-sm mt-1 font-medium ${
-            isUp ? "text-green-500" : "text-red-500"
+          className={`text-sm mt-1 ${
+            change.startsWith("+")
+              ? "text-green-500"
+              : "text-red-500"
           }`}
         >
           {change}

@@ -33,7 +33,7 @@ export default function Users() {
     <div className="space-y-4">
       <h1 className="text-xl font-bold">Presence System ⚡</h1>
 
-      <div className="bg-white rounded shadow">
+      <div className="bg-white dark:bg-gray-900 dark:text-white rounded shadow transition">
         {users.map((u) => (
           <div key={u.id} className="p-4 border-b">
             <p className="font-medium">{u.email}</p>

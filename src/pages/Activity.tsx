@@ -32,7 +32,7 @@ export default function Activity() {
     <div className="space-y-4">
       <h1 className="text-xl font-bold">Live Activity 🔥</h1>
 
-      <div className="bg-white rounded shadow">
+      <div className="bg-white dark:bg-gray-900 dark:text-white rounded shadow transition">
         {logs.map((l) => (
           <div key={l.id} className="p-3 border-b text-sm">
             {l.email} → {l.action}

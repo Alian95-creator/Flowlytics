@@ -2,7 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
-/* biar keliatan kalau jalan */
-body {
-  font-family: sans-serif;
+/* TRUE DARK MODE */
+html.dark {
+  background-color: #000;
+}
+
+/* Neon glow helpers */
+.neon-green {
+  color: #00ff9f;
+  text-shadow: 0 0 8px rgba(0, 255, 159, 0.6);
+}
+
+.neon-red {
+  color: #ff4d4f;
+  text-shadow: 0 0 8px rgba(255, 77, 79, 0.6);
+}
+
+/* Card glow */
+.card-dark {
+  background: #000;
+  border: 1px solid #111;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.03);
 }

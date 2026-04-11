@@ -1,54 +1,53 @@
-import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import RevenueChart from "../components/RevenueChart";
+import { useState } from "react";
+import TradingViewChart from "../components/TradingViewChart";
 
-const mapSymbol: any = {
-  xauusd: "GC=F", // Gold
-  oilusd: "CL=F", // Oil
-  copperusd: "HG=F", // Copper
-};
+const commodities = [
+  { name: "Gold (XAU/USD)", key: "xauusd", symbol: "OANDA:XAUUSD" },
+  { name: "Oil (WTI)", key: "oilusd", symbol: "OANDA:WTICOUSD" },
+  { name: "Copper", key: "copperusd", symbol: "COMEX:HG1!" },
+];
 
 export default function Commodity() {
   const { symbol } = useParams();
-  const [chart, setChart] = useState<any[]>([]);
 
-  useEffect(() => {
-    if (symbol) fetchCommodity(symbol);
-  }, [symbol]);
+  const defaultCommodity =
+    commodities.find((c) => c.key === symbol) || commodities[0];
 
-  async function fetchCommodity(sym: string) {
-    try {
-      const ticker = mapSymbol[sym];
-
-      const res = await fetch(
-        `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=1mo&interval=1d`
-      );
-
-      const data = await res.json();
-
-      const result = data.chart.result[0];
-
-      const prices = result.indicators.quote[0].close;
-      const timestamps = result.timestamp;
-
-      const formatted = prices.map((p: number, i: number) => ({
-        date: new Date(timestamps[i] * 1000).toLocaleDateString(),
-        price: p,
-      }));
-
-      setChart(formatted);
-    } catch (err) {
-      console.error(err);
-    }
-  }
+  const [selected, setSelected] = useState(defaultCommodity);
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-bold">
-        {symbol?.toUpperCase()} Chart
+
+      {/* TITLE */}
+      <h1 className="text-xl font-bold dark:text-white">
+        Commodity Dashboard
       </h1>
 
-      <RevenueChart data={chart} />
+      {/* CHART */}
+      <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow border transition">
+        <TradingViewChart symbol={selected.symbol} />
+      </div>
+
+      {/* LIST */}
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow border transition">
+        {commodities.map((c) => (
+          <div
+            key={c.key}
+            onClick={() => setSelected(c)}
+            className={`p-4 border-b cursor-pointer transition
+              ${
+                selected.key === c.key
+                  ? "bg-gray-100 dark:bg-gray-800"
+                  : "hover:bg-gray-50 dark:hover:bg-gray-800"
+              }
+            `}
+          >
+            {c.name}
+          </div>
+        ))}
+      </div>
+
     </div>
   );
 }

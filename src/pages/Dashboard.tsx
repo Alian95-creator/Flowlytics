@@ -44,7 +44,7 @@ export default function Dashboard() {
     <div className="space-y-6">
 
       {/* HEADER */}
-      <div className="bg-white p-4 rounded-2xl shadow border">
+      <div className="bg-white dark:bg-gray-900 dark:text-white p-4 rounded-2xl shadow border transition">
         <h2 className="text-lg font-semibold mb-2">
           IDR → USDT
         </h2>

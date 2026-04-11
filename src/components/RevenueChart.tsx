@@ -9,7 +9,7 @@ import {
 
 export default function RevenueChart({ data }: any) {
   return (
-    <div className="bg-white p-4 rounded-2xl shadow-sm border">
+    <div className="bg-white dark:bg-gray-900 dark:text-white p-4 rounded-2xl shadow-sm border transition">
       <h3 className="mb-4 font-semibold">Price Chart (30 Days)</h3>
 
       <ResponsiveContainer width="100%" height={300}>

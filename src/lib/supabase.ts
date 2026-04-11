@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = "flowlytics-835b9.firebaseapp.com";
-const supabaseKey = "AIzaSyAWaQ6JMpS1fcje_1Wpk6zyQfZAkO2nfkw";
+const supabaseUrl = "https://tccaqzrziqgfrtmnrdfy.supabase.co";
+const supabaseKey = "sb_publishable_fQk23d6do-oRB9098cNUgg_6_ZdvfuT";
 
 export const supabase = createClient(supabaseUrl, supabaseKey);

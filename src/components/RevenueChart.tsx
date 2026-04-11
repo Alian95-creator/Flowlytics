@@ -7,25 +7,19 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const data = [
-  { month: "Jan", revenue: 4000 },
-  { month: "Feb", revenue: 3000 },
-  { month: "Mar", revenue: 5000 },
-  { month: "Apr", revenue: 7000 },
-  { month: "May", revenue: 6000 },
-];
-
-export default function RevenueChart() {
+export default function RevenueChart({ data }: any) {
   return (
-    <div className="bg-white p-4 rounded shadow">
-      <h3 className="mb-4 font-semibold">Revenue Overview</h3>
+    <div className="bg-white p-4 rounded-2xl shadow-sm border">
+      <h3 className="mb-4 font-semibold">
+        Bitcoin Price (30 Days)
+      </h3>
 
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data}>
-          <XAxis dataKey="month" />
+          <XAxis dataKey="date" />
           <YAxis />
           <Tooltip />
-          <Line type="monotone" dataKey="revenue" />
+          <Line type="monotone" dataKey="price" />
         </LineChart>
       </ResponsiveContainer>
     </div>

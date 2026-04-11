@@ -10,9 +10,7 @@ import {
 export default function RevenueChart({ data }: any) {
   return (
     <div className="bg-white p-4 rounded-2xl shadow-sm border">
-      <h3 className="mb-4 font-semibold">
-        Bitcoin Price (30 Days)
-      </h3>
+      <h3 className="mb-4 font-semibold">Price Chart (30 Days)</h3>
 
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data}>

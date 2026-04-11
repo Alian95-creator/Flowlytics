@@ -26,7 +26,7 @@ export default function Commodity() {
 
       {/* CHART */}
       <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow border transition">
-        <TradingViewChart symbol={selected.symbol} />
+        <TradingViewChart symbol="BINANCE:BTCUSDT" />
       </div>
 
       {/* LIST */}

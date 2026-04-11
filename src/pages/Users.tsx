@@ -85,7 +85,7 @@ export default function Users() {
       <div className="flex gap-2">
         <button
           onClick={() => setPage((p) => Math.max(p - 1, 1))}
-          className="px-3 py-1 border rounded"
+          className="px-3 py-1 border rounded hover:bg-gray-100 transition"
         >
           Prev
         </button>
@@ -98,7 +98,7 @@ export default function Users() {
           onClick={() =>
             setPage((p) => Math.min(p + 1, totalPages))
           }
-          className="px-3 py-1 border rounded"
+          className="px-3 py-1 border rounded hover:bg-gray-100 transition"
         >
           Next
         </button>

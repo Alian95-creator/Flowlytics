@@ -1,8 +1,17 @@
 import Card from "../components/Card";
 import RevenueChart from "../components/RevenueChart";
+import { useEffect, useState } from "react";
+
+const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+  setTimeout(() => setLoading(false), 1000);
+}, []);
 
 export default function Dashboard() {
-  return (
+  if (loading) {
+    return <div className="p-6">Loading dashboard...</div>;
+  }
     <div className="p-6 space-y-6">
 
       {/* CARDS */}

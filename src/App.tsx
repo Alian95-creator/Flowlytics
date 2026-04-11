@@ -3,16 +3,32 @@ import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import BottomNav from "./components/BottomNav";
 import { Routes, Route } from "react-router-dom";
+import { useAuth } from "./hooks/useAuth";
 
 import Crypto from "./pages/Crypto";
 import Commodity from "./pages/Commodity";
 import Forex from "./pages/Forex";
 import Users from "./pages/Users";
 import Activity from "./pages/Activity";
+import Login from "./pages/Login"; // ✅ WAJIB IMPORT
 
 export default function App() {
   const [open, setOpen] = useState(false);
   const touchStartX = useRef(0);
+  const { user, loading } = useAuth();
+
+  // ✅ AUTH GUARD DI SINI (TOP LEVEL)
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen dark:bg-black text-white">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Login />;
+  }
 
   function handleTouchStart(e: React.TouchEvent) {
     touchStartX.current = e.touches[0].clientX;
@@ -21,13 +37,8 @@ export default function App() {
   function handleTouchEnd(e: React.TouchEvent) {
     const deltaX = e.changedTouches[0].clientX - touchStartX.current;
 
-    if (deltaX > 80) {
-      setOpen(true); // swipe right → open
-    }
-
-    if (deltaX < -80) {
-      setOpen(false); // swipe left → close
-    }
+    if (deltaX > 80) setOpen(true);
+    if (deltaX < -80) setOpen(false);
   }
 
   return (
@@ -46,8 +57,11 @@ export default function App() {
         <div
           className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm md:hidden"
           onClick={() => setOpen(false)}
+        >
+          <div
+            className="w-64 h-full bg-black border-r border-gray-800 p-6 animate-slideIn"
+            onClick={(e) => e.stopPropagation()}
           >
-          <div className="w-64 h-full bg-black border-r border-gray-800 p-6 animate-slideIn">
             <Sidebar />
           </div>
         </div>

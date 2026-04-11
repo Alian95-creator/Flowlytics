@@ -6,9 +6,16 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   const login = async () => {
+    if (!email) return alert("Enter your email bro");
+
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithOtp({ email });
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: "http://localhost:5173",
+      },
+    });
 
     setLoading(false);
 
@@ -22,10 +29,9 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
       
-      {/* CARD */}
       <div className="bg-white/5 backdrop-blur-lg border border-white/10 p-8 rounded-2xl shadow-xl w-full max-w-sm">
 
-        {/* LOGO / BRAND */}
+        {/* TITLE */}
         <h1 className="text-2xl font-bold text-white text-center mb-2">
           Flowlytics
         </h1>

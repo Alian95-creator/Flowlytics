@@ -6,7 +6,7 @@ export default function Sidebar() {
 
       <div>
         <h1 className="text-2xl font-bold p-6 neon-green">
-          Flowlytics
+          Market-pulse
         </h1>
 
         <nav className="space-y-1 px-4 text-sm">

@@ -3,16 +3,33 @@ import { supabase } from "../lib/supabase";
 
 export default function Users() {
   const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
   async function fetchUsers() {
+    setLoading(true);
+
     const { data, error } = await supabase.from("users").select("*");
 
-    if (error) console.error(error);
-    else setUsers(data);
+    if (error) {
+      setError(error.message);
+    } else {
+      setUsers(data || []);
+    }
+
+    setLoading(false);
+  }
+
+  if (loading) {
+    return <div className="p-6">Loading users...</div>;
+  }
+
+  if (error) {
+    return <div className="p-6 text-red-500">{error}</div>;
   }
 
   return (

@@ -43,7 +43,10 @@ export default function App() {
 
       {/* MOBILE SIDEBAR */}
       {open && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm md:hidden">
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm md:hidden"
+          onClick={() => setOpen(false)}
+          >
           <div className="w-64 h-full bg-black border-r border-gray-800 p-6 animate-slideIn">
             <Sidebar />
           </div>

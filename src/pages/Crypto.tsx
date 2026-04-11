@@ -1,69 +1,174 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import TradingViewChart from "../components/TradingViewChart";
 
 export default function Crypto() {
   const [coins, setCoins] = useState<any[]>([]);
-  const [selected, setSelected] = useState("BINANCE:BTCUSDT");
+  const [filtered, setFiltered] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [params, setParams] = useSearchParams();
+
+  const symbol = params.get("symbol") || "BTC";
 
   useEffect(() => {
     fetchCoins();
   }, []);
 
+  useEffect(() => {
+    const result = coins.filter((c) => {
+      const name = c.name?.toLowerCase() || "";
+      const sym = c.symbol?.toLowerCase() || "";
+
+      return (
+        name.includes(search.toLowerCase()) ||
+        sym.includes(search.toLowerCase())
+      );
+    });
+
+    setFiltered(result);
+  }, [search, coins]);
+
   async function fetchCoins() {
-    const res = await fetch(
-      "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1"
-    );
-    const data = await res.json();
-    setCoins(data);
+    try {
+      setLoading(true);
+
+      const res = await fetch(
+        "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1"
+      );
+
+      const data = await res.json();
+
+      if (!Array.isArray(data)) {
+        setCoins([]);
+        setFiltered([]);
+        return;
+      }
+
+      setCoins(data);
+      setFiltered(data);
+    } catch (err) {
+      console.error("Fetch error:", err);
+      setCoins([]);
+      setFiltered([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleSelect(sym: string) {
+    setParams({ symbol: sym });
   }
 
   return (
     <div className="space-y-6">
 
-      <TradingViewChart symbol={selected} />
+      {/* CHART */}
+      <div className="dark:card-dark p-4 rounded-2xl">
+        <TradingViewChart
+          key={symbol}
+          symbol={`BINANCE:${symbol}USDT`}
+        />
+      </div>
 
-      <div className="dark:card-dark rounded-2xl overflow-hidden">
+      {/* SEARCH */}
+      <input
+        type="text"
+        placeholder="Search coin..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="w-full p-3 rounded-xl bg-black border border-gray-800 text-white outline-none focus:border-white transition"
+      />
 
-        <table className="w-full text-sm">
+      {/* LIST */}
+      <div className="dark:card-dark rounded-2xl max-h-[500px] overflow-y-auto">
 
-          <thead className="border-b border-gray-800 text-gray-400">
-            <tr>
-              <th className="p-3 text-left">Coin</th>
-              <th>Price</th>
-              <th>24h</th>
-            </tr>
-          </thead>
+        {/* LOADING */}
+        {loading && (
+          <p className="text-center text-gray-500 p-4">
+            Loading coins...
+          </p>
+        )}
 
-          <tbody>
-            {coins.map((c) => {
-              const positive = c.price_change_percentage_24h > 0;
+        {/* EMPTY */}
+        {!loading && filtered.length === 0 && (
+          <p className="text-center text-gray-500 p-4">
+            No coins found...
+          </p>
+        )}
 
-              return (
-                <tr
-                  key={c.id}
-                  onClick={() =>
-                    setSelected(`BINANCE:${c.symbol.toUpperCase()}USDT`)
+        {/* DATA */}
+        {!loading &&
+          filtered.map((c) => {
+            const price =
+              typeof c.current_price === "number"
+                ? c.current_price
+                : 0;
+
+            const change =
+              typeof c.price_change_percentage_24h === "number"
+                ? c.price_change_percentage_24h
+                : 0;
+
+            const symbolUpper = c.symbol
+              ? c.symbol.toUpperCase()
+              : "UNKNOWN";
+
+            const active = symbolUpper === symbol;
+
+            return (
+              <div
+                key={c.id}
+                onClick={() => handleSelect(symbolUpper)}
+                className={`flex items-center justify-between p-4 border-b border-gray-900 cursor-pointer transition
+                  ${
+                    active
+                      ? "bg-white/5 neon-green"
+                      : "hover:bg-white/5"
                   }
-                  className="cursor-pointer border-b border-gray-900 hover:bg-white/5 transition"
-                >
-                  <td className="p-3 flex items-center gap-2">
-                    <img src={c.image} className="w-5 h-5" />
-                    {c.symbol.toUpperCase()}
-                  </td>
+                `}
+              >
+                <div className="flex items-center gap-3">
+                  <img
+                    src={c.image}
+                    alt={c.name}
+                    className="w-6 h-6"
+                    onError={(e) =>
+                      (e.currentTarget.style.display = "none")
+                    }
+                  />
 
-                  <td className="dark:text-white">
-                    ${c.current_price.toLocaleString()}
-                  </td>
+                  <div>
+                    <p className="text-white">
+                      {c.name || "Unknown Coin"}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {symbolUpper}
+                    </p>
+                  </div>
+                </div>
 
-                  <td className={positive ? "neon-green" : "neon-red"}>
-                    {c.price_change_percentage_24h.toFixed(2)}%
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
+                <div className="text-right">
+                  <p className="text-white">
+                    ${price.toLocaleString()}
+                  </p>
 
-        </table>
+                  <p
+                    className={`text-sm ${
+                      change > 0
+                        ? "neon-green"
+                        : "neon-red"
+                    }`}
+                  >
+                    {Number.isFinite(change)
+                      ? change.toFixed(2)
+                      : "0.00"}
+                    %
+                  </p>
+                </div>
+              </div>
+            );
+          })}
       </div>
     </div>
   );

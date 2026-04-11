@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import TradingViewChart from "../components/TradingViewChart";
 
 const commodities = [
@@ -11,26 +11,30 @@ const commodities = [
 export default function Commodity() {
   const { symbol } = useParams();
 
-  const defaultCommodity =
-    commodities.find((c) => c.key === symbol) || commodities[0];
+  const [selected, setSelected] = useState(commodities[0]);
 
-  const [selected, setSelected] = useState(defaultCommodity);
+  // 🔥 SYNC DENGAN URL
+  useEffect(() => {
+    const found =
+      commodities.find((c) => c.key === symbol) || commodities[0];
+
+    setSelected(found);
+  }, [symbol]);
 
   return (
     <div className="space-y-6">
 
-      {/* TITLE */}
       <h1 className="text-xl font-bold dark:text-white">
         Commodity Dashboard
       </h1>
 
       {/* CHART */}
-      <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow border transition">
+      <div className="bg-white dark:bg-black p-4 rounded-2xl shadow border transition">
         <TradingViewChart key={selected.symbol} symbol={selected.symbol} />
       </div>
 
       {/* LIST */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow border transition">
+      <div className="bg-white dark:bg-black rounded-2xl shadow border transition">
         {commodities.map((c) => (
           <div
             key={c.key}

@@ -2,16 +2,16 @@ import { Link } from "react-router-dom";
 
 export default function Sidebar() {
   return (
-    <div className="w-full md:w-64 bg-black text-white border-r border-gray-800 p-6 flex flex-col justify-between">
+    <div className="w-64 bg-black text-white h-full flex flex-col justify-between">
 
       <div>
-        <h1 className="text-2xl font-bold mb-8 neon-green">
+        <h1 className="text-2xl font-bold p-6 neon-green">
           Flowlytics
         </h1>
 
-        <nav className="space-y-2 text-sm">
+        <nav className="space-y-1 px-4 text-sm">
 
-          <p className="text-gray-500 text-xs">MARKET</p>
+          <p className="text-gray-500 text-xs mt-4">MARKET</p>
 
           <Link to="/crypto" className="block px-3 py-2 rounded hover:bg-white/5 transition">
             Crypto
@@ -33,7 +33,7 @@ export default function Sidebar() {
             Forex
           </Link>
 
-          <p className="text-gray-500 text-xs mt-4">SYSTEM</p>
+          <p className="text-gray-500 text-xs mt-6">SYSTEM</p>
 
           <Link to="/users" className="block px-3 py-2 rounded hover:bg-white/5 transition">
             Users
@@ -42,11 +42,10 @@ export default function Sidebar() {
           <Link to="/activity" className="block px-3 py-2 rounded hover:bg-white/5 transition">
             Activity
           </Link>
-
         </nav>
       </div>
 
-      <div className="text-xs text-gray-500">
+      <div className="text-xs text-gray-500 p-4">
         Realtime Engine ⚡
       </div>
     </div>

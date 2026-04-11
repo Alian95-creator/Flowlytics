@@ -26,7 +26,7 @@ function AppContent() {
     <div className="flex">
       <Sidebar />
 
-      <div className="flex-1 bg-gray-100 min-h-screen">
+      <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 dark:bg-black transition">
         <Header />
 
         <div className="p-6">

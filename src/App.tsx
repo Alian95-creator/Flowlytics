@@ -5,11 +5,16 @@ import Login from "./pages/Login";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import { useAuth } from "./hooks/useAuth";
+import { useLocation } from "react-router-dom";
+import { useOnlineUsers } from "./hooks/useOnlineUsers";
 
 export default function App() {
   const { user } = useAuth();
 
   if (!user) return <Login />;
+
+  const location = useLocation();
+  useOnlineUsers(user, location.pathname);
 
   return (
     <BrowserRouter>

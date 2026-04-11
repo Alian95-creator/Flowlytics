@@ -2,45 +2,53 @@ import { Link } from "react-router-dom";
 
 export default function Sidebar() {
   return (
-    <div className="w-64 bg-black text-white min-h-screen p-6 flex flex-col justify-between">
-      
-      {/* TOP */}
+    <div className="w-full md:w-64 bg-black text-white border-r border-gray-800 p-6 flex flex-col justify-between">
+
       <div>
-        <h1 className="text-2xl font-bold mb-8">Flowlytics</h1>
+        <h1 className="text-2xl font-bold mb-8 neon-green">
+          Flowlytics
+        </h1>
 
         <nav className="space-y-2 text-sm">
 
-          <p className="text-gray-400 text-xs mt-4 mb-2">CRYPTO</p>
-          <Link to="/crypto" className="block hover:bg-white/10 px-3 py-2 rounded">
-            Crypto Prices
+          <p className="text-gray-500 text-xs">MARKET</p>
+
+          <Link to="/crypto" className="block px-3 py-2 rounded hover:bg-white/5 transition">
+            Crypto
           </Link>
 
-          <p className="text-gray-400 text-xs mt-4 mb-2">COMMODITIES</p>
-          <Link to="/commodity/xauusd" className="block hover:bg-white/10 px-3 py-2 rounded">Gold (XAU/USD)</Link>
-          <Link to="/commodity/oilusd" className="block hover:bg-white/10 px-3 py-2 rounded">Oil</Link>
-          <Link to="/commodity/copperusd" className="block hover:bg-white/10 px-3 py-2 rounded">Copper</Link>
-
-          <p className="text-gray-400 text-xs mt-4 mb-2">FOREX</p>
-          <Link to="/forex" className="block hover:bg-white/10 px-3 py-2 rounded">
-            IDR Comparison
+          <Link to="/commodity/xauusd" className="block px-3 py-2 rounded hover:bg-white/5 transition">
+            Gold
           </Link>
 
-          <p className="text-gray-400 text-xs mt-4 mb-2">SYSTEM</p>
-          <Link to="/users" className="block hover:bg-white/10 px-3 py-2 rounded">
-            Active Users
+          <Link to="/commodity/oilusd" className="block px-3 py-2 rounded hover:bg-white/5 transition">
+            Oil
           </Link>
-          <Link to="/activity" className="block hover:bg-white/10 px-3 py-2 rounded">
-            Activity Feed
+
+          <Link to="/commodity/copperusd" className="block px-3 py-2 rounded hover:bg-white/5 transition">
+            Copper
+          </Link>
+
+          <Link to="/forex" className="block px-3 py-2 rounded hover:bg-white/5 transition">
+            Forex
+          </Link>
+
+          <p className="text-gray-500 text-xs mt-4">SYSTEM</p>
+
+          <Link to="/users" className="block px-3 py-2 rounded hover:bg-white/5 transition">
+            Users
+          </Link>
+
+          <Link to="/activity" className="block px-3 py-2 rounded hover:bg-white/5 transition">
+            Activity
           </Link>
 
         </nav>
       </div>
 
-      {/* BOTTOM */}
-      <div className="text-xs text-gray-400">
-        Realtime System ⚡
+      <div className="text-xs text-gray-500">
+        Realtime Engine ⚡
       </div>
-
     </div>
   );
 }

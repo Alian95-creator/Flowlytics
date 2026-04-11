@@ -31,10 +31,6 @@ export default function TradingViewChart({ symbol }: { symbol: string }) {
   }, [symbol]);
 
   return (
-    <div
-      id="tradingview_chart"
-      ref={ref}
-      className="w-full h-[500px]"
-    />
-  );
+  <div className="w-full h-[400px] md:h-[600px] rounded-2xl overflow-hidden border border-gray-800 transition-all duration-300" ref={ref} />
+);
 }

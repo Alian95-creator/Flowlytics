@@ -1,37 +1,44 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Users from "./pages/Users";
+import Activity from "./pages/Activity";
 import Login from "./pages/Login";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import { useAuth } from "./hooks/useAuth";
-import { useLocation } from "react-router-dom";
 import { useOnlineUsers } from "./hooks/useOnlineUsers";
 
-export default function App() {
-  const { user } = useAuth();
+function AppContent() {
+  const { user, loading } = useAuth();
+  const location = useLocation();
+
+  // 🚨 hook harus selalu dipanggil (tidak boleh conditional)
+  useOnlineUsers(user, location.pathname);
+
+  if (loading) return <div className="p-6">Loading...</div>;
 
   if (!user) return <Login />;
 
-  const location = useLocation();
-  useOnlineUsers(user, location.pathname);
-
   return (
-    <BrowserRouter>
-      <div className="flex bg-gray-100 min-h-screen">
-        <Sidebar />
+    <div className="flex">
+      <Sidebar />
 
-        <div className="flex-1 flex flex-col">
-          <Header />
+      <div className="flex-1 bg-gray-100 min-h-screen">
+        <Header />
 
-          <main className="p-6">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/users" element={<Users />} />
-            </Routes>
-          </main>
+        <div className="p-6">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/users" element={<Users />} />
+            <Route path="/activity" element={<Activity />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
         </div>
       </div>
-    </BrowserRouter>
+    </div>
   );
+}
+
+export default function App() {
+  return <AppContent />;
 }

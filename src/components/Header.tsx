@@ -4,17 +4,19 @@ export default function Header() {
   const { dark, setDark } = useTheme();
 
   return (
-    <div className="bg-white dark:bg-gray-900 border-b px-6 py-4 flex justify-between items-center transition">
+    <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-black transition">
 
-      <h2 className="font-semibold dark:text-white">
+      {/* LEFT */}
+      <h1 className="text-lg font-semibold dark:text-white">
         Dashboard
-      </h2>
+      </h1>
 
+      {/* RIGHT */}
       <button
         onClick={() => setDark(!dark)}
-        className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-sm"
+        className="px-4 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-black hover:bg-gray-200 dark:hover:bg-white/5 transition"
       >
-        {dark ? "Light ☀️" : "Dark 🌙"}
+        {dark ? "☀️ Light" : "🌙 Dark"}
       </button>
 
     </div>

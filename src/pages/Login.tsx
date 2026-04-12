@@ -3,7 +3,7 @@ import { useState } from "react";
 import { supabase } from "../lib/supabase";
 
 export default function Login() {
-  const [flip, setFlip] = useState(false);
+  const [mode, setMode] = useState<"login" | "signup">("login");
 
   async function handleGoogle() {
     await supabase.auth.signInWithOAuth({
@@ -12,98 +12,99 @@ export default function Login() {
   }
 
   return (
-    <div className="h-screen flex items-center justify-center bg-black overflow-hidden relative">
+    <div className="min-h-screen flex items-center justify-center bg-black relative overflow-hidden px-4">
 
-      {/* BACKGROUND */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,170,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,170,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
+      {/* 🔥 BACKGROUND GLOW */}
+      <div className="absolute w-72 h-72 bg-green-500/10 blur-3xl rounded-full top-0 left-0" />
+      <div className="absolute w-72 h-72 bg-blue-500/10 blur-3xl rounded-full bottom-0 right-0" />
 
-      {/* CONTAINER */}
-      <div className="relative w-[700px] h-[400px] flex items-center justify-center perspective">
+      {/* 🔥 MAIN PANEL */}
+      <div className="relative w-full max-w-md h-[480px] rounded-2xl overflow-hidden border border-white/10 backdrop-blur-xl bg-white/5 shadow-xl">
 
-        {/* LOGIN (LEFT) */}
+        {/* 🔥 SLIDING CONTAINER */}
         <motion.div
-          initial={{ x: -300, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.6 }}
-          className="absolute left-0 w-[300px] h-[350px] rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 p-6 text-center"
+          animate={{ x: mode === "login" ? "0%" : "-100%" }}
+          transition={{ duration: 0.5 }}
+          className="flex w-[200%] h-full"
         >
-          <h2 className="text-white text-lg mb-4">Login</h2>
 
-          <button
-            onClick={handleGoogle}
-            className="w-full py-2 bg-green-500 text-black rounded-lg hover:scale-105 transition"
-          >
-            Google Login
-          </button>
-        </motion.div>
+          {/* ================= LOGIN ================= */}
+          <div className="w-full flex flex-col justify-center p-6">
 
-        {/* SIGN UP (RIGHT) */}
-        <motion.div
-          initial={{ x: 300, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.6 }}
-          className="absolute right-0 w-[300px] h-[350px] rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 p-6 text-center"
-        >
-          <h2 className="text-white text-lg mb-4">Sign Up</h2>
+            <h2 className="text-white text-xl font-semibold text-center">
+              Welcome Back
+            </h2>
 
-          {/* 🔥 FLIP CARD */}
-          <div
-            className="w-full h-[200px] relative"
-            onMouseEnter={() => setFlip(true)}
-            onMouseLeave={() => setFlip(false)}
-          >
-            <motion.div
-              animate={{ rotateY: flip ? 180 : 0 }}
-              transition={{ duration: 0.6 }}
-              className="w-full h-full absolute"
-              style={{ transformStyle: "preserve-3d" }}
+            <p className="text-gray-400 text-sm text-center mb-6">
+              Login to your account
+            </p>
+
+            <button
+              onClick={handleGoogle}
+              className="w-full py-2 bg-green-500 text-black rounded-lg font-semibold hover:scale-105 transition"
             >
+              Continue with Google
+            </button>
 
-              {/* FRONT */}
-              <div className="absolute w-full h-full backface-hidden flex items-center justify-center">
-                <button className="px-4 py-2 bg-blue-500 text-white rounded-lg">
-                  Create Account
-                </button>
-              </div>
-
-              {/* BACK (FORM) */}
-              <div className="absolute w-full h-full backface-hidden rotate-y-180 flex flex-col gap-2 justify-center">
-                <input
-                  type="email"
-                  placeholder="Email"
-                  className="p-2 rounded bg-black border border-gray-700 text-white"
-                />
-                <input
-                  type="password"
-                  placeholder="Password"
-                  className="p-2 rounded bg-black border border-gray-700 text-white"
-                />
-                <button className="bg-green-500 py-2 rounded text-black">
-                  Register
-                </button>
-              </div>
-
-            </motion.div>
+            <p className="text-gray-400 text-sm mt-6 text-center">
+              Don’t have an account?{" "}
+              <span
+                onClick={() => setMode("signup")}
+                className="text-green-400 cursor-pointer"
+              >
+                Sign Up
+              </span>
+            </p>
           </div>
+
+          {/* ================= SIGNUP ================= */}
+          <div className="w-full flex flex-col justify-center p-6">
+
+            <h2 className="text-white text-xl font-semibold text-center">
+              Create Account
+            </h2>
+
+            <p className="text-gray-400 text-sm text-center mb-6">
+              Join Flowlytics today
+            </p>
+
+            <input
+              type="email"
+              placeholder="Email"
+              className="mb-3 p-2 rounded bg-black border border-gray-700 text-white"
+            />
+
+            <input
+              type="password"
+              placeholder="Password"
+              className="mb-4 p-2 rounded bg-black border border-gray-700 text-white"
+            />
+
+            <button className="w-full py-2 bg-green-500 text-black rounded-lg font-semibold hover:scale-105 transition">
+              Register
+            </button>
+
+            <p className="text-gray-400 text-sm mt-6 text-center">
+              Already have an account?{" "}
+              <span
+                onClick={() => setMode("login")}
+                className="text-green-400 cursor-pointer"
+              >
+                Login
+              </span>
+            </p>
+          </div>
+
         </motion.div>
+
+        {/* 🔥 INDICATOR BAR */}
+        <motion.div
+          animate={{ left: mode === "login" ? "0%" : "50%" }}
+          transition={{ duration: 0.5 }}
+          className="absolute bottom-0 w-1/2 h-[3px] bg-green-400"
+        />
 
       </div>
-
-      {/* STYLE TAMBAHAN */}
-      <style>
-        {`
-          .perspective {
-            perspective: 1000px;
-          }
-          .backface-hidden {
-            backface-visibility: hidden;
-          }
-          .rotate-y-180 {
-            transform: rotateY(180deg);
-          }
-        `}
-      </style>
-
     </div>
   );
 }

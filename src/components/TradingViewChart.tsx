@@ -1,33 +1,34 @@
 import { useEffect, useRef } from "react";
 
 export default function TradingViewChart({ symbol }: { symbol: string }) {
-  const ref = useRef<HTMLDivElement>(null);
+  const container = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!ref.current) return;
+    if (!container.current) return;
 
-    ref.current.innerHTML = "";
+    container.current.innerHTML = "";
 
     const script = document.createElement("script");
-    script.src = "https://s3.tradingview.com/tv.js";
+    script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
     script.async = true;
 
-    script.onload = () => {
-      // @ts-ignore
-      new window.TradingView.widget({
-        container_id: ref.current,
-        width: "100%",
-        height: 400,
-        symbol: `BINANCE:${symbol}USDT`,
-        interval: "D",
-        theme: "dark",
-        style: "1",
-        locale: "en",
-      });
-    };
+    script.innerHTML = JSON.stringify({
+      autosize: true,
+      symbol: `BINANCE:${symbol}USDT`,
+      interval: "15",
+      timezone: "Etc/UTC",
+      theme: "dark",
+      style: "1",
+      locale: "en",
+      enable_publishing: false,
+      allow_symbol_change: true,
+      details: true,
+      hotlist: true,
+      calendar: false,
+    });
 
-    ref.current.appendChild(script);
+    container.current.appendChild(script);
   }, [symbol]);
 
-  return <div ref={ref} />;
+  return <div ref={container} className="w-full h-[500px]" />;
 }

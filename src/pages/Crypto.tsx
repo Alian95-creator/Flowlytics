@@ -6,6 +6,7 @@ interface Coin {
   id: string;
   name: string;
   symbol: string;
+  image: string;
   current_price: number;
   price_change_percentage_24h: number;
 }
@@ -14,75 +15,144 @@ export default function Crypto() {
   const [coins, setCoins] = useState<Coin[]>([]);
   const [search, setSearch] = useState("");
   const [selectedCoin, setSelectedCoin] = useState<Coin | null>(null);
+  const [watchlist, setWatchlist] = useState<string[]>([]);
 
-  // FETCH DATA
+  // 🔥 LOAD WATCHLIST
   useEffect(() => {
-    axios
-      .get(
-        "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=100&page=1"
-      )
-      .then((res) => setCoins(res.data))
-      .catch(console.error);
+    const saved = localStorage.getItem("watchlist");
+    if (saved) setWatchlist(JSON.parse(saved));
   }, []);
 
-  // FILTER
+  // 🔥 SAVE WATCHLIST
+  useEffect(() => {
+    localStorage.setItem("watchlist", JSON.stringify(watchlist));
+  }, [watchlist]);
+
+  // 🔥 FETCH DATA (REALTIME REFRESH)
+  useEffect(() => {
+    const fetchData = () => {
+      axios
+        .get(
+          "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=100&page=1"
+        )
+        .then((res) => {
+          setCoins(res.data);
+          if (!selectedCoin) setSelectedCoin(res.data[0]);
+        })
+        .catch(console.error);
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 10000); // update tiap 10 detik
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // 🔍 FILTER
   const filteredCoins = coins.filter((coin) =>
     coin.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  // ⭐ TOGGLE WATCHLIST
+  const toggleWatchlist = (id: string) => {
+    setWatchlist((prev) =>
+      prev.includes(id)
+        ? prev.filter((c) => c !== id)
+        : [...prev, id]
+    );
+  };
+
   return (
-    <div className="p-6 min-h-screen">
+    <div className="flex h-screen">
 
-      <h1 className="text-2xl font-bold mb-4">Crypto Market</h1>
+      {/* LEFT PANEL */}
+      <div className="w-1/3 border-r border-gray-300 dark:border-gray-800 p-4 overflow-y-auto">
 
-      {/* SEARCH */}
-      <input
-        type="text"
-        placeholder="Search coin..."
-        className="w-full p-2 mb-6 rounded bg-gray-200 dark:bg-gray-800"
-        onChange={(e) => setSearch(e.target.value)}
-      />
+        <h1 className="text-xl font-bold mb-4">Markets</h1>
 
-      {/* GRID */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* SEARCH */}
+        <input
+          type="text"
+          placeholder="Search coin..."
+          className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-800"
+          onChange={(e) => setSearch(e.target.value)}
+        />
 
-        {filteredCoins.map((coin) => (
-          <div
-            key={coin.id}
-            onClick={() => setSelectedCoin(coin)}
-            className="p-4 rounded-xl cursor-pointer border border-gray-300 dark:border-gray-700 hover:scale-105 transition bg-gray-100 dark:bg-gray-900"
-          >
-            <div className="flex justify-between">
-              <h2>{coin.name}</h2>
-              <span
-                className={
-                  coin.price_change_percentage_24h > 0
-                    ? "text-green-500"
-                    : "text-red-500"
-                }
+        {/* LIST */}
+        <div className="space-y-2">
+
+          {filteredCoins.map((coin) => (
+            <div
+              key={coin.id}
+              onClick={() => setSelectedCoin(coin)}
+              className={`flex items-center justify-between p-3 rounded cursor-pointer transition
+                ${
+                  selectedCoin?.id === coin.id
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-100 dark:bg-gray-900 hover:scale-[1.02]"
+                }`}
+            >
+              {/* LEFT */}
+              <div className="flex items-center gap-2">
+                <img src={coin.image} className="w-5 h-5" />
+                <div>
+                  <p className="text-sm font-semibold">
+                    {coin.symbol.toUpperCase()}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {coin.name}
+                  </p>
+                </div>
+              </div>
+
+              {/* RIGHT */}
+              <div className="text-right">
+                <p className="text-sm">
+                  ${coin.current_price.toLocaleString()}
+                </p>
+
+                <p
+                  className={
+                    coin.price_change_percentage_24h > 0
+                      ? "text-green-500 text-xs"
+                      : "text-red-500 text-xs"
+                  }
+                >
+                  {coin.price_change_percentage_24h?.toFixed(2)}%
+                </p>
+              </div>
+
+              {/* ⭐ WATCHLIST */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleWatchlist(coin.id);
+                }}
+                className="ml-2"
               >
-                {coin.price_change_percentage_24h?.toFixed(2)}%
-              </span>
+                {watchlist.includes(coin.id) ? "⭐" : "☆"}
+              </button>
             </div>
-
-            <p className="text-xl font-bold">
-              ${coin.current_price.toLocaleString()}
-            </p>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
-      {/* DETAIL */}
-      {selectedCoin && (
-        <div className="mt-10 p-6 rounded-xl bg-gray-200 dark:bg-gray-900">
+      {/* RIGHT PANEL */}
+      <div className="flex-1 p-4">
 
-          <h2 className="text-xl font-bold mb-4">
-            {selectedCoin.name} Chart
-          </h2>
+        {selectedCoin && (
+          <>
+            <h2 className="text-xl font-bold mb-4">
+              {selectedCoin.name} / USDT
+            </h2>
 
-          <TradingViewChart symbol={selectedCoin.symbol.toUpperCase()} />
-        </div>
-      )}
+            {/* TRADINGVIEW */}
+            <TradingViewChart
+              symbol={selectedCoin.symbol.toUpperCase()}
+            />
+          </>
+        )}
+      </div>
     </div>
   );
 }

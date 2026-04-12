@@ -17,8 +17,9 @@ export default function Crypto() {
   const [coins, setCoins] = useState<Coin[]>([]);
   const [filtered, setFiltered] = useState<Coin[]>([]);
   const [search, setSearch] = useState("");
-  const [params, setParams] = useSearchParams();
+  const [mode, setMode] = useState<"price" | "mcap">("price");
 
+  const [params, setParams] = useSearchParams();
   const symbol = params.get("symbol") || "BTC";
 
   useEffect(() => {
@@ -49,14 +50,12 @@ export default function Crypto() {
     return `$${p.toLocaleString()}`;
   }
 
-  // 🔥 FAKE AI SIGNAL (RSI STYLE)
   function getSignal(change: number) {
     if (change > 3) return { text: "SELL", color: "text-red-400" };
     if (change < -3) return { text: "BUY", color: "text-green-400" };
     return { text: "HOLD", color: "text-yellow-400" };
   }
 
-  // 🔥 MINI SPARKLINE
   function Sparkline({ data }: { data: number[] }) {
     const max = Math.max(...data);
     const min = Math.min(...data);
@@ -86,7 +85,7 @@ export default function Crypto() {
 
       {/* HEADER */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-green-400 neon-green">
+        <h1 className="text-2xl font-bold text-green-400">
           Pro Crypto Terminal
         </h1>
 
@@ -98,11 +97,40 @@ export default function Crypto() {
         />
       </div>
 
+      {/* TOGGLE PRICE / MCAP */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setMode("price")}
+          className={`px-3 py-1 rounded ${
+            mode === "price"
+              ? "bg-green-400 text-black"
+              : "bg-gray-800 text-white"
+          }`}
+        >
+          Price
+        </button>
+
+        <button
+          onClick={() => setMode("mcap")}
+          className={`px-3 py-1 rounded ${
+            mode === "mcap"
+              ? "bg-green-400 text-black"
+              : "bg-gray-800 text-white"
+          }`}
+        >
+          Mcap
+        </button>
+      </div>
+
       {/* CHART */}
       <div className="card-dark p-4 rounded-2xl">
         <TradingViewChart
-          key={symbol}
-          symbol={`BINANCE:${symbol}USDT`}
+          key={symbol + mode}
+          symbol={
+            mode === "price"
+              ? `BINANCE:${symbol}USDT`
+              : `CRYPTOCAP:${symbol}`
+          }
         />
       </div>
 
@@ -117,7 +145,10 @@ export default function Crypto() {
           return (
             <div
               key={c.id}
-              onClick={() => setParams({ symbol: sym })}
+              onClick={() => {
+                setMode("price"); // 🔥 reset ke price
+                setParams({ symbol: sym });
+              }}
               className="card-dark p-4 rounded-xl cursor-pointer 
               border border-gray-800 hover:border-green-400
               hover:scale-105 transition-all duration-300"

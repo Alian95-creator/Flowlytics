@@ -22,6 +22,12 @@ export default function Crypto() {
   const [params, setParams] = useSearchParams();
   const symbol = params.get("symbol") || "BTC";
 
+  // 🔥 FIX SYMBOL (NO RANDOM ERROR)
+  const chartSymbol =
+    mode === "price"
+      ? `BINANCE:${symbol}USDT`
+      : `CRYPTOCAP:${symbol}`;
+
   useEffect(() => {
     fetchCoins();
     const interval = setInterval(fetchCoins, 15000);
@@ -86,7 +92,7 @@ export default function Crypto() {
       {/* HEADER */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-green-400">
-          Pro Crypto Terminal
+          Crypto Price Outlook
         </h1>
 
         <input
@@ -97,7 +103,7 @@ export default function Crypto() {
         />
       </div>
 
-      {/* TOGGLE PRICE / MCAP */}
+      {/* TOGGLE */}
       <div className="flex gap-2">
         <button
           onClick={() => setMode("price")}
@@ -125,12 +131,8 @@ export default function Crypto() {
       {/* CHART */}
       <div className="card-dark p-4 rounded-2xl">
         <TradingViewChart
-          key={symbol + mode}
-          symbol={
-            mode === "price"
-              ? `BINANCE:${symbol}USDT`
-              : `CRYPTOCAP:${symbol}`
-          }
+          key={`${symbol}-${mode}-${Date.now()}`}
+          symbol={chartSymbol}
         />
       </div>
 
@@ -146,8 +148,8 @@ export default function Crypto() {
             <div
               key={c.id}
               onClick={() => {
-                setMode("price"); // 🔥 reset ke price
                 setParams({ symbol: sym });
+                setMode("price"); // 🔥 reset ke price
               }}
               className="card-dark p-4 rounded-xl cursor-pointer 
               border border-gray-800 hover:border-green-400

@@ -1,61 +1,60 @@
 import { useState } from "react";
-import { supabase } from "../lib/supabase";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault(); // ⛔ biar gak reload page
-
+  function handleLogin(e: any) {
+    e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-    });
+    setTimeout(() => {
+      // 🔥 ambil full path + query
+      const lastPath =
+        localStorage.getItem("lastPath") || "/crypto";
 
-    if (error) {
-      alert(error.message);
-    } else {
-      alert("Check your email for login link 🚀");
-    }
+      localStorage.removeItem("lastPath");
 
-    setLoading(false);
+      navigate(lastPath); // ✅ React navigation
+    }, 1000);
   }
 
   return (
-    <div className="flex items-center justify-center h-screen bg-black">
+    <div className="min-h-screen flex items-center justify-center bg-black">
+
+      {/* GLOW */}
+      <div className="absolute w-[400px] h-[400px] bg-green-500/20 blur-3xl rounded-full animate-pulse"></div>
 
       <form
         onSubmit={handleLogin}
-        className="bg-black border border-gray-800 p-8 rounded-2xl w-full max-w-sm space-y-4"
+        className="relative z-10 card-dark p-8 rounded-2xl w-[320px] space-y-4 animate-fadeIn"
       >
-        <h1 className="text-2xl font-bold text-white text-center">
-          Flowlytics
+        <h1 className="text-xl font-bold text-center">
+          Login
         </h1>
 
         <input
           type="email"
-          placeholder="you@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
           required
-          className="w-full p-3 rounded bg-black border border-gray-700 text-white outline-none focus:border-white transition"
+          className="w-full p-3 rounded bg-black border border-gray-700 text-white"
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          required
+          className="w-full p-3 rounded bg-black border border-gray-700 text-white"
         />
 
         <button
           type="submit"
-          disabled={loading}
-          className="w-full p-3 rounded bg-white text-black font-semibold hover:opacity-90 transition"
+          className="w-full py-3 bg-green-500 text-black rounded-lg font-bold"
         >
-          {loading ? "Sending..." : "Send Magic Link"}
+          {loading ? "Signing in..." : "Login"}
         </button>
-
-        <p className="text-xs text-gray-500 text-center">
-          Press Enter to login ⚡
-        </p>
       </form>
-
     </div>
   );
 }

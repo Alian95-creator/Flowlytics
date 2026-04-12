@@ -41,3 +41,29 @@
 .hover-glow:hover {
   box-shadow: 0 0 15px rgba(0, 255, 159, 0.4);
 }
+
+/* SHIMMER EFFECT */
+@keyframes shimmer {
+  0% {
+    background-position: -500px 0;
+  }
+  100% {
+    background-position: 500px 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    #111 25%,
+    #1f1f1f 37%,
+    #111 63%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+/* SMOOTH TRANSITION GLOBAL */
+* {
+  transition: all 0.2s ease-in-out;
+}

@@ -1,8 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import BottomNav from "./components/BottomNav";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 
 import Crypto from "./pages/Crypto";
@@ -10,23 +10,39 @@ import Commodity from "./pages/Commodity";
 import Forex from "./pages/Forex";
 import Users from "./pages/Users";
 import Activity from "./pages/Activity";
-import Login from "./pages/Login"; // ✅ WAJIB IMPORT
+import Login from "./pages/Login";
+import Landing from "./pages/Landing";
+import Pricing from "./pages/Pricing";
 
 export default function App() {
   const [open, setOpen] = useState(false);
   const touchStartX = useRef(0);
   const { user, loading } = useAuth();
+  const location = useLocation();
 
-  // ✅ AUTH GUARD DI SINI (TOP LEVEL)
+  const publicRoutes = ["/", "/login", "/pricing"];
+  const isPublic = publicRoutes.includes(location.pathname);
+
+  // 🔥 SIMPAN FULL PATH + QUERY
+  useEffect(() => {
+    if (!user && !isPublic) {
+      const fullPath =
+        location.pathname + location.search;
+
+      localStorage.setItem("lastPath", fullPath);
+    }
+  }, [location, user]);
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen dark:bg-black text-white">
+      <div className="flex items-center justify-center h-screen bg-black text-white">
         Loading...
       </div>
     );
   }
 
-  if (!user) {
+  // 🔐 BLOCK PRIVATE
+  if (!user && !isPublic) {
     return <Login />;
   }
 
@@ -35,31 +51,42 @@ export default function App() {
   }
 
   function handleTouchEnd(e: React.TouchEvent) {
-    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    const deltaX =
+      e.changedTouches[0].clientX - touchStartX.current;
 
     if (deltaX > 80) setOpen(true);
     if (deltaX < -80) setOpen(false);
   }
 
+  // 🌐 PUBLIC PAGE
+  if (isPublic) {
+    return (
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/login" element={<Login />} />
+      </Routes>
+    );
+  }
+
+  // 💻 DASHBOARD
   return (
     <div
       className="flex min-h-screen bg-gray-100 dark:bg-black transition"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* DESKTOP SIDEBAR */}
       <div className="hidden md:block">
         <Sidebar />
       </div>
 
-      {/* MOBILE SIDEBAR */}
       {open && (
         <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-50 bg-black/80 md:hidden"
           onClick={() => setOpen(false)}
         >
           <div
-            className="w-64 h-full bg-black border-r border-gray-800 p-6 animate-slideIn"
+            className="w-64 h-full bg-black p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <Sidebar />
@@ -67,9 +94,7 @@ export default function App() {
         </div>
       )}
 
-      {/* MAIN */}
       <div className="flex-1 flex flex-col">
-
         <Header onMenuClick={() => setOpen(true)} />
 
         <div className="p-4 md:p-6 flex-1 pb-20">
@@ -82,11 +107,9 @@ export default function App() {
           </Routes>
         </div>
 
-        {/* MOBILE NAV */}
         <div className="md:hidden">
           <BottomNav />
         </div>
-
       </div>
     </div>
   );

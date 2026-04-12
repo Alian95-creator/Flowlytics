@@ -14,7 +14,7 @@ interface Coin {
 export default function Crypto() {
   const [coins, setCoins] = useState<Coin[]>([]);
   const [search, setSearch] = useState("");
-  const [selectedCoin, setSelectedCoin] = useState<Coin | null>(null);
+  const [selectedCoinId, setSelectedCoinId] = useState<string | null>(null);
   const [watchlist, setWatchlist] = useState<string[]>([]);
 
   // 🔥 LOAD WATCHLIST
@@ -23,37 +23,44 @@ export default function Crypto() {
     if (saved) setWatchlist(JSON.parse(saved));
   }, []);
 
-  // 🔥 SAVE WATCHLIST
   useEffect(() => {
     localStorage.setItem("watchlist", JSON.stringify(watchlist));
   }, [watchlist]);
 
-  // 🔥 FETCH DATA (REALTIME REFRESH)
+  // 🔥 FETCH DATA (NO RESET)
   useEffect(() => {
-    const fetchData = () => {
-      axios
-        .get(
+    const fetchData = async () => {
+      try {
+        const res = await axios.get(
           "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=100&page=1"
-        )
-        .then((res) => {
-          setCoins(res.data);
-          if (!selectedCoin) setSelectedCoin(res.data[0]);
-        })
-        .catch(console.error);
+        );
+
+        setCoins(res.data);
+
+        // SET DEFAULT ONLY ON FIRST LOAD
+        if (!selectedCoinId && res.data.length > 0) {
+          setSelectedCoinId(res.data[0].id);
+        }
+      } catch (err) {
+        console.error(err);
+      }
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 10000); // update tiap 10 detik
+    const interval = setInterval(fetchData, 10000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedCoinId]);
+
+  // 🔥 GET SELECTED COIN DARI LIST TERBARU
+  const selectedCoin = coins.find((c) => c.id === selectedCoinId);
 
   // 🔍 FILTER
   const filteredCoins = coins.filter((coin) =>
     coin.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  // ⭐ TOGGLE WATCHLIST
+  // ⭐ WATCHLIST
   const toggleWatchlist = (id: string) => {
     setWatchlist((prev) =>
       prev.includes(id)
@@ -70,7 +77,6 @@ export default function Crypto() {
 
         <h1 className="text-xl font-bold mb-4">Markets</h1>
 
-        {/* SEARCH */}
         <input
           type="text"
           placeholder="Search coin..."
@@ -78,21 +84,19 @@ export default function Crypto() {
           onChange={(e) => setSearch(e.target.value)}
         />
 
-        {/* LIST */}
         <div className="space-y-2">
 
           {filteredCoins.map((coin) => (
             <div
               key={coin.id}
-              onClick={() => setSelectedCoin(coin)}
+              onClick={() => setSelectedCoinId(coin.id)}
               className={`flex items-center justify-between p-3 rounded cursor-pointer transition
                 ${
-                  selectedCoin?.id === coin.id
+                  selectedCoinId === coin.id
                     ? "bg-blue-500 text-white"
                     : "bg-gray-100 dark:bg-gray-900 hover:scale-[1.02]"
                 }`}
             >
-              {/* LEFT */}
               <div className="flex items-center gap-2">
                 <img src={coin.image} className="w-5 h-5" />
                 <div>
@@ -105,7 +109,6 @@ export default function Crypto() {
                 </div>
               </div>
 
-              {/* RIGHT */}
               <div className="text-right">
                 <p className="text-sm">
                   ${coin.current_price.toLocaleString()}
@@ -122,7 +125,6 @@ export default function Crypto() {
                 </p>
               </div>
 
-              {/* ⭐ WATCHLIST */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -146,7 +148,6 @@ export default function Crypto() {
               {selectedCoin.name} / USDT
             </h2>
 
-            {/* TRADINGVIEW */}
             <TradingViewChart
               symbol={selectedCoin.symbol.toUpperCase()}
             />

@@ -16,26 +16,26 @@ export default function Crypto() {
   const [search, setSearch] = useState("");
   const [selectedCoinId, setSelectedCoinId] = useState<string | null>(null);
   const [watchlist, setWatchlist] = useState<string[]>([]);
+  const [prices, setPrices] = useState<Record<string, number>>({});
 
-  // 🔥 LOAD WATCHLIST
+  // ⭐ LOAD WATCHLIST
   useEffect(() => {
     const saved = localStorage.getItem("watchlist");
     if (saved) setWatchlist(JSON.parse(saved));
   }, []);
 
+  // ⭐ SAVE WATCHLIST
   useEffect(() => {
     localStorage.setItem("watchlist", JSON.stringify(watchlist));
   }, [watchlist]);
 
-  // 🔥 FETCH DATA (NO RESET)
+  // 🔥 FETCH COINS (VIA VERCEL API)
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await axios.get("/api/crypto");
-
         setCoins(res.data);
 
-        // SET DEFAULT ONLY ON FIRST LOAD
         if (!selectedCoinId && res.data.length > 0) {
           setSelectedCoinId(res.data[0].id);
         }
@@ -45,20 +45,39 @@ export default function Crypto() {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 10000);
-
-    return () => clearInterval(interval);
   }, [selectedCoinId]);
 
-  // 🔥 GET SELECTED COIN DARI LIST TERBARU
-  const selectedCoin = coins.find((c) => c.id === selectedCoinId);
+  // ⚡ REALTIME PRICE (BINANCE WEBSOCKET)
+  useEffect(() => {
+    const ws = new WebSocket(
+      "wss://stream.binance.com:9443/ws/!miniTicker@arr"
+    );
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      const updated: Record<string, number> = {};
+
+      data.forEach((coin: any) => {
+        const symbol = coin.s.replace("USDT", "").toLowerCase();
+        updated[symbol] = parseFloat(coin.c);
+      });
+
+      setPrices(updated);
+    };
+
+    return () => ws.close();
+  }, []);
 
   // 🔍 FILTER
   const filteredCoins = coins.filter((coin) =>
     coin.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  // ⭐ WATCHLIST
+  // 🔥 SELECTED COIN
+  const selectedCoin = coins.find((c) => c.id === selectedCoinId);
+
+  // ⭐ TOGGLE WATCHLIST
   const toggleWatchlist = (id: string) => {
     setWatchlist((prev) =>
       prev.includes(id)
@@ -84,56 +103,64 @@ export default function Crypto() {
 
         <div className="space-y-2">
 
-          {filteredCoins.map((coin) => (
-            <div
-              key={coin.id}
-              onClick={() => setSelectedCoinId(coin.id)}
-              className={`flex items-center justify-between p-3 rounded cursor-pointer transition
-                ${
-                  selectedCoinId === coin.id
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-100 dark:bg-gray-900 hover:scale-[1.02]"
-                }`}
-            >
-              <div className="flex items-center gap-2">
-                <img src={coin.image} className="w-5 h-5" />
-                <div>
-                  <p className="text-sm font-semibold">
-                    {coin.symbol.toUpperCase()}
+          {filteredCoins.map((coin) => {
+            const livePrice =
+              prices[coin.symbol] ?? coin.current_price;
+
+            return (
+              <div
+                key={coin.id}
+                onClick={() => setSelectedCoinId(coin.id)}
+                className={`flex items-center justify-between p-3 rounded cursor-pointer transition
+                  ${
+                    selectedCoinId === coin.id
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-100 dark:bg-gray-900 hover:scale-[1.02]"
+                  }`}
+              >
+                {/* LEFT */}
+                <div className="flex items-center gap-2">
+                  <img src={coin.image} className="w-5 h-5" />
+                  <div>
+                    <p className="text-sm font-semibold">
+                      {coin.symbol.toUpperCase()}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {coin.name}
+                    </p>
+                  </div>
+                </div>
+
+                {/* PRICE */}
+                <div className="text-right">
+                  <p className="text-sm">
+                    ${livePrice.toLocaleString()}
                   </p>
-                  <p className="text-xs text-gray-500">
-                    {coin.name}
+
+                  <p
+                    className={
+                      coin.price_change_percentage_24h > 0
+                        ? "text-green-500 text-xs"
+                        : "text-red-500 text-xs"
+                    }
+                  >
+                    {coin.price_change_percentage_24h?.toFixed(2)}%
                   </p>
                 </div>
-              </div>
 
-              <div className="text-right">
-                <p className="text-sm">
-                  ${coin.current_price.toLocaleString()}
-                </p>
-
-                <p
-                  className={
-                    coin.price_change_percentage_24h > 0
-                      ? "text-green-500 text-xs"
-                      : "text-red-500 text-xs"
-                  }
+                {/* ⭐ WATCHLIST */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleWatchlist(coin.id);
+                  }}
+                  className="ml-2"
                 >
-                  {coin.price_change_percentage_24h?.toFixed(2)}%
-                </p>
+                  {watchlist.includes(coin.id) ? "⭐" : "☆"}
+                </button>
               </div>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleWatchlist(coin.id);
-                }}
-                className="ml-2"
-              >
-                {watchlist.includes(coin.id) ? "⭐" : "☆"}
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

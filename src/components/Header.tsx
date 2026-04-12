@@ -1,6 +1,6 @@
 import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 type Props = {
   onMenuClick?: () => void;

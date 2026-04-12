@@ -7,68 +7,65 @@ type Candle = {
   low: number;
 };
 
-type Pair = {
-  pair: string;
+type Commodity = {
+  name: string;
+  symbol: string;
   price: number;
   change: number;
-  country: string;
   tvSymbol: string;
+  image: string;
   candles: Candle[];
 };
 
-const bases = [
-  { code: "USD", country: "us" },
-  { code: "EUR", country: "eu" },
-  { code: "GBP", country: "gb" },
-  { code: "AUD", country: "au" },
-  { code: "JPY", country: "jp" },
-  { code: "CNY", country: "cn" },
-  { code: "SGD", country: "sg" },
-  { code: "MYR", country: "my" },
-  { code: "THB", country: "th" },
-  { code: "KRW", country: "kr" },
-  { code: "TWD", country: "tw" },
-  { code: "HKD", country: "hk" },
-  { code: "SAR", country: "sa" },
+const baseData = [
+  {
+    name: "Gold",
+    symbol: "XAU/USD",
+    price: 2300,
+    tvSymbol: "OANDA:XAUUSD",
+    image: "/commodities/gold.png",
+  },
+  {
+    name: "Silver",
+    symbol: "XAG/USD",
+    price: 27,
+    tvSymbol: "OANDA:XAGUSD",
+    image: "/commodities/silver.png",
+  },
+  {
+    name: "Oil",
+    symbol: "WTI",
+    price: 80,
+    tvSymbol: "TVC:USOIL",
+    image: "/commodities/oil.png",
+  },
 ];
 
-export default function Forex() {
-  const [data, setData] = useState<Pair[]>([]);
+export default function Commodity() {
+  const [data, setData] = useState<Commodity[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 2000); // ⚡ faster refresh
+    generateData();
+    const interval = setInterval(generateData, 2000); // ⚡ realtime feel
     return () => clearInterval(interval);
   }, []);
 
-  async function fetchData() {
-    try {
-      const results = await Promise.all(
-        bases.map(async (b) => {
-          const res = await fetch(
-            `https://open.er-api.com/v6/latest/${b.code}`
-          );
-          const json = await res.json();
+  function generateData() {
+    const results = baseData.map((item) => {
+      const change = Math.random() * 2 - 1;
+      const newPrice = item.price + change;
 
-          const price = json?.rates?.["IDR"] || 0;
+      return {
+        ...item,
+        price: newPrice,
+        change,
+        candles: generateCandles(newPrice),
+      };
+    });
 
-          return {
-            pair: `${b.code}/IDR`,
-            price,
-            change: Math.random() * 2 - 1,
-            country: b.country,
-            tvSymbol: `FX_IDC:${b.code}IDR`,
-            candles: generateCandles(price),
-          };
-        })
-      );
-
-      setData(results);
-      setLoading(false);
-    } catch (err) {
-      console.error(err);
-    }
+    setData(results);
+    setLoading(false);
   }
 
   function generateCandles(base: number): Candle[] {
@@ -113,7 +110,6 @@ export default function Forex() {
 
           return (
             <g key={i}>
-              {/* wick */}
               <line
                 x1={x}
                 x2={x}
@@ -123,7 +119,6 @@ export default function Forex() {
                 strokeWidth="1"
               />
 
-              {/* body */}
               <rect
                 x={x - 1}
                 y={Math.min(openY, closeY)}
@@ -142,7 +137,7 @@ export default function Forex() {
     <div className="space-y-6">
 
       <h1 className="text-2xl font-bold text-green-400 neon-green">
-        Forex Dashboard
+        Commodity Dashboard
       </h1>
 
       {loading ? (
@@ -152,24 +147,27 @@ export default function Forex() {
 
           {data.map((item) => (
             <div
-              key={item.pair}
+              key={item.symbol}
               onClick={() => openChart(item.tvSymbol)}
               className="p-4 rounded-xl border cursor-pointer transition-all hover:scale-105 bg-black border-gray-800"
             >
               {/* HEADER */}
               <div className="flex items-center gap-2">
                 <img
-                  src={`https://flagcdn.com/w40/${item.country}.png`}
-                  className="w-6 h-4 rounded-sm"
+                  src={item.image}
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = "/logo.png";
+                  }}
+                  className="w-6 h-6"
                 />
                 <p className="text-gray-300 text-sm">
-                  {item.pair}
+                  {item.symbol}
                 </p>
               </div>
 
               {/* PRICE */}
               <p className="text-xl font-bold text-white mt-2">
-                Rp {item.price.toLocaleString("id-ID")}
+                ${item.price.toFixed(2)}
               </p>
 
               {/* CHANGE */}
@@ -183,7 +181,7 @@ export default function Forex() {
                 {item.change.toFixed(2)}%
               </p>
 
-              {/* 🔥 MINI CANDLE */}
+              {/* MINI CANDLE */}
               {renderCandles(item.candles)}
 
             </div>

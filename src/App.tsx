@@ -5,6 +5,7 @@ import BottomNav from "./components/BottomNav";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import { supabase } from "./lib/supabase";
+import { Navigate } from "react-router-dom";
 
 import Crypto from "./pages/Crypto";
 import Commodity from "./pages/Commodity";
@@ -85,6 +86,7 @@ export default function App() {
 
         <div className="p-4 flex-1 pb-20">
           <Routes>
+            <Route path="/" element={<Navigate to="/crypto" />} />
             <Route path="/crypto" element={<Crypto />} />
             <Route path="/commodity" element={<Commodity />} />
             <Route path="/forex" element={<Forex />} />

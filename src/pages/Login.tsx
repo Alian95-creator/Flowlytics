@@ -78,14 +78,17 @@ export default function Login() {
 
   // 🔥 GOOGLE LOGIN (HARUS DI LUAR RETURN)
   async function handleGoogleLogin() {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-    });
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: window.location.origin + "/crypto",
+    },
+  });
 
-    if (error) {
-      toast.error(error.message);
-    }
+  if (error) {
+    toast.error(error.message);
   }
+}
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-black">

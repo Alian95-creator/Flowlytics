@@ -42,7 +42,7 @@ export default function App() {
   }
 
   // 🔐 BLOCK PRIVATE
-  if (!user && !isPublic) {
+  if (!user) {
     return <Login />;
   }
 

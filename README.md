@@ -18,7 +18,9 @@ A modern SaaS-style crypto analytics dashboard built with:
 - 📈 30-day price chart
 
 ## 🌐 Live Demo
+
 https://flowlytics-red.vercel.app/crypto
+
 
 ## 📦 Tech Stack
 - Frontend: React, Vite, Tailwind
@@ -29,5 +31,6 @@ https://flowlytics-red.vercel.app/crypto
 
 ![Preview App](./assets/preview.png)
 ---
+
 
 Built for portfolio & frontend engineering showcase.

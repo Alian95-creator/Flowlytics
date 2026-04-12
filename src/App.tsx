@@ -86,7 +86,7 @@ export default function App() {
         <div className="p-4 flex-1 pb-20">
           <Routes>
             <Route path="/crypto" element={<Crypto />} />
-            <Route path="/commodity/:symbol" element={<Commodity />} />
+            <Route path="/commodity" element={<Commodity />} />
             <Route path="/forex" element={<Forex />} />
             <Route path="/users" element={<Users />} />
             <Route path="/activity" element={<Activity />} />

@@ -1,15 +1,15 @@
-import { useTheme } from "../hooks/useTheme";
+type Props = {
+  onMenuClick?: () => void;
+};
 
-export default function Header({ onMenuClick }: any) {
-  const { dark, setDark } = useTheme();
-
+export default function Header({ onMenuClick }: Props) {
   return (
-    <div className="flex items-center justify-between px-4 md:px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-black transition">
+    <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-white dark:bg-black transition">
 
       {/* LEFT */}
       <div className="flex items-center gap-3">
 
-        {/* HAMBURGER (MOBILE ONLY) */}
+        {/* MOBILE MENU */}
         <button
           onClick={onMenuClick}
           className="md:hidden text-white text-xl"
@@ -17,18 +17,25 @@ export default function Header({ onMenuClick }: any) {
           ☰
         </button>
 
-        <h1 className="text-lg font-semibold dark:text-white">
-          Dashboard
-        </h1>
+        {/* LOGO */}
+        <div className="flex items-center gap-2">
+          <img src="/logo.png" className="w-6 h-6" />
+          <span className="font-bold text-white hidden sm:block">
+            Flowlytics
+          </span>
+        </div>
+
       </div>
 
       {/* RIGHT */}
-      <button
-        onClick={() => setDark(!dark)}
-        className="px-3 py-1 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-black hover:bg-gray-200 dark:hover:bg-white/5 transition"
-      >
-        {dark ? "☀️" : "🌙"}
-      </button>
+      <div className="flex items-center gap-3">
+
+        {/* DARK MODE BUTTON (kalau ada logic lama, tetap aman) */}
+        <button className="px-3 py-1 rounded-lg bg-gray-800 text-white">
+          🌙
+        </button>
+
+      </div>
     </div>
   );
 }

@@ -12,7 +12,7 @@ export function useAuth() {
       setLoading(false);
     });
 
-    // listen login/logout
+    // listen perubahan auth
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user ?? null);

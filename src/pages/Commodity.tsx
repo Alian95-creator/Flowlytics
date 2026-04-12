@@ -15,7 +15,7 @@ const commodities: Commodity[] = [
     name: "Gold",
     symbol: "XAU/USD",
     tvSymbol: "OANDA:XAUUSD",
-    image: "https://assets.coincap.io/assets/icons/xau@2x.png",
+    image: "/commodities/xau.png",
     price: "$2,300",
     change: "+1.2%",
   },
@@ -23,7 +23,7 @@ const commodities: Commodity[] = [
     name: "Oil",
     symbol: "WTI",
     tvSymbol: "TVC:USOIL",
-    image: "https://assets.coincap.io/assets/icons/wti@2x.png",
+    image: "/commodities/oil.png",
     price: "$82",
     change: "-0.8%",
   },
@@ -31,7 +31,7 @@ const commodities: Commodity[] = [
     name: "Silver",
     symbol: "XAG/USD",
     tvSymbol: "OANDA:XAGUSD",
-    image: "https://assets.coincap.io/assets/icons/xag@2x.png",
+    image: "/commodities/xag.png",
     price: "$27",
     change: "+0.5%",
   },
@@ -62,7 +62,14 @@ export default function Commodity() {
               bg-gray-100 dark:bg-gray-900`}
           >
             <div className="flex items-center gap-2 mb-2">
-              <img src={item.image} className="w-6 h-6" />
+              <img 
+              src={item.image}
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = "/logo.png";
+               }}
+               className="w-6 h-6 object-contain"
+               />
+
               <h2 className="font-semibold">{item.symbol}</h2>
             </div>
 

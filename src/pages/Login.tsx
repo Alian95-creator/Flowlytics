@@ -1,92 +1,151 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabase";
+import { useNavigate, useLocation } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export default function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<"login" | "signup">("login");
-  const navigate = useNavigate();
 
-  function handleSubmit(e: any) {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const redirectTo = (location.state as any)?.from || "/crypto";
+
+  // 🔥 LOGIN
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
 
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+      return;
+    }
+
+    toast.success("Login berhasil 🚀");
+
     setTimeout(() => {
-      const lastPath =
-        localStorage.getItem("lastPath") || "/crypto";
+      navigate(redirectTo, { replace: true });
+    }, 800);
+  }
 
-      localStorage.removeItem("lastPath");
+  // 🔥 SIGNUP + AUTO LOGIN
+  async function handleSignup() {
+    if (!email || !password) {
+      toast.error("Isi email & password dulu");
+      return;
+    }
 
-      navigate(lastPath);
-    }, 1000);
+    setLoading(true);
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+      return;
+    }
+
+    // auto login
+    const { error: loginError } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+    if (loginError) {
+      toast.error("Signup berhasil, tapi login gagal");
+      setLoading(false);
+      return;
+    }
+
+    toast.success("Akun dibuat & langsung login 🔥");
+
+    setTimeout(() => {
+      navigate("/crypto");
+    }, 800);
+  }
+
+  // 🔥 GOOGLE LOGIN (HARUS DI LUAR RETURN)
+  async function handleGoogleLogin() {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+    });
+
+    if (error) {
+      toast.error(error.message);
+    }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black">
-
-      {/* BACKGROUND GLOW */}
-      <div className="absolute w-[400px] h-[400px] bg-green-500/20 blur-3xl rounded-full animate-pulse"></div>
+    <div className="flex items-center justify-center min-h-screen bg-black">
 
       <form
-        onSubmit={handleSubmit}
-        className="relative z-10 card-dark p-8 rounded-2xl w-[320px] space-y-4 animate-fadeIn"
+        onSubmit={handleLogin}
+        className="bg-gray-900 p-8 rounded-2xl w-full max-w-sm border border-gray-800 space-y-4"
       >
-        <h1 className="text-xl font-bold text-center text-white">
-          {mode === "login" ? "Login" : "Create Account"}
+        <h1 className="text-2xl font-bold text-white text-center">
+          Flowlytics Login
         </h1>
 
         {/* EMAIL */}
         <input
           type="email"
           placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full p-3 rounded-lg bg-black border border-gray-700 text-white outline-none focus:border-green-400 transition"
           required
-          className="w-full p-3 rounded bg-black border border-gray-700 text-white"
         />
 
         {/* PASSWORD */}
         <input
           type="password"
           placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full p-3 rounded-lg bg-black border border-gray-700 text-white outline-none focus:border-green-400 transition"
           required
-          className="w-full p-3 rounded bg-black border border-gray-700 text-white"
         />
 
-        {/* CONFIRM PASSWORD (SIGNUP ONLY) */}
-        {mode === "signup" && (
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            required
-            className="w-full p-3 rounded bg-black border border-gray-700 text-white"
-          />
-        )}
-
-        {/* BUTTON */}
+        {/* LOGIN */}
         <button
           type="submit"
-          className="w-full py-3 bg-green-500 text-black rounded-lg font-bold"
+          disabled={loading}
+          className="w-full p-3 rounded-lg bg-green-500 text-black font-bold hover:opacity-80 transition"
         >
-          {loading
-            ? "Processing..."
-            : mode === "login"
-            ? "Login"
-            : "Sign Up"}
+          {loading ? "Processing..." : "Login"}
         </button>
 
-        {/* SWITCH MODE */}
-        <p className="text-sm text-center text-gray-400">
-          {mode === "login"
-            ? "Don't have an account?"
-            : "Already have an account?"}
+        {/* GOOGLE */}
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="w-full p-3 rounded-lg bg-white text-black font-bold hover:opacity-80 transition"
+        >
+          Continue with Google
+        </button>
 
-          <span
-            onClick={() =>
-              setMode(mode === "login" ? "signup" : "login")
-            }
-            className="ml-1 text-green-400 cursor-pointer hover:underline"
-          >
-            {mode === "login" ? "Sign up" : "Login"}
-          </span>
-        </p>
+        {/* SIGNUP */}
+        <button
+          type="button"
+          onClick={handleSignup}
+          disabled={loading}
+          className="w-full p-3 rounded-lg border border-gray-700 text-white hover:bg-white/10 transition"
+        >
+          Sign Up
+        </button>
+
       </form>
     </div>
   );

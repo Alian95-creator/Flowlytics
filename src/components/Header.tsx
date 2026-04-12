@@ -1,49 +1,47 @@
-import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
+import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 type Props = {
   onMenuClick?: () => void;
 };
 
 export default function Header({ onMenuClick }: Props) {
-  const [dark, setDark] = useState(false);
+  const navigate = useNavigate();
+  const [dark, setDark] = useState(true);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("theme");
-
-    if (saved === "dark") {
-      document.documentElement.classList.add("dark");
-      setDark(true);
-    }
-  }, []);
-
+  // 🔥 DARK MODE TOGGLE
   function toggleDark() {
-    if (dark) {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    } else {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    }
-
+    const html = document.documentElement;
+    html.classList.toggle("dark");
     setDark(!dark);
   }
 
+  // 🔥 LOGOUT
+  async function handleLogout() {
+    await supabase.auth.signOut();
+
+    navigate("/login", { replace: true });
+  }
+
   return (
-    <div className="flex items-center justify-between p-4 border-b border-green-500/20 bg-white dark:bg-black transition">
+    <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-white dark:bg-black transition">
 
       {/* LEFT */}
       <div className="flex items-center gap-3">
 
+        {/* MOBILE MENU */}
         <button
           onClick={onMenuClick}
-          className="md:hidden text-black dark:text-white text-xl"
+          className="md:hidden text-white text-xl"
         >
           ☰
         </button>
 
+        {/* LOGO */}
         <div className="flex items-center gap-2">
           <img src="/logo.png" className="w-6 h-6" />
-          <span className="font-bold text-black dark:text-white hidden sm:block">
+          <span className="font-bold text-white hidden sm:block">
             Flowlytics
           </span>
         </div>
@@ -51,13 +49,25 @@ export default function Header({ onMenuClick }: Props) {
       </div>
 
       {/* RIGHT */}
-      <button
-        onClick={toggleDark}
-        className="px-3 py-1 rounded-lg bg-gray-200 dark:bg-gray-800 text-black dark:text-white transition hover:shadow-[0_0_10px_rgba(0,255,159,0.5)]"
-      >
-        {dark ? "☀️" : "🌙"}
-      </button>
+      <div className="flex items-center gap-3">
 
+        {/* DARK MODE */}
+        <button
+          onClick={toggleDark}
+          className="px-3 py-1 rounded-lg bg-gray-200 dark:bg-gray-800 text-black dark:text-white transition"
+        >
+          {dark ? "☀️" : "🌙"}
+        </button>
+
+        {/* LOGOUT */}
+        <button
+          onClick={handleLogout}
+          className="px-3 py-1 rounded-lg bg-red-500 text-white hover:opacity-80 transition"
+        >
+          Logout
+        </button>
+
+      </div>
     </div>
   );
 }

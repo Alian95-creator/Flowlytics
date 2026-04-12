@@ -13,7 +13,7 @@ export default function Login() {
 
   const redirectTo = (location.state as any)?.from || "/crypto";
 
-  // 🔥 LOGIN
+  // 🔥 LOGIN EMAIL
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -56,7 +56,7 @@ export default function Login() {
       return;
     }
 
-    // auto login
+    // auto login setelah signup
     const { error: loginError } =
       await supabase.auth.signInWithPassword({
         email,
@@ -76,23 +76,25 @@ export default function Login() {
     }, 800);
   }
 
-  // 🔥 GOOGLE LOGIN (HARUS DI LUAR RETURN)
+  // 🔥 GOOGLE LOGIN (FIX FINAL)
   async function handleGoogleLogin() {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: window.location.origin + "/crypto",
-    },
-  });
+    setLoading(true);
 
-  if (error) {
-    toast.error(error.message);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin, // 🔥 PENTING (BUKAN /crypto)
+      },
+    });
+
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+    }
   }
-}
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-black">
-
       <form
         onSubmit={handleLogin}
         className="bg-gray-900 p-8 rounded-2xl w-full max-w-sm border border-gray-800 space-y-4"
@@ -134,6 +136,7 @@ export default function Login() {
         <button
           type="button"
           onClick={handleGoogleLogin}
+          disabled={loading}
           className="w-full p-3 rounded-lg bg-white text-black font-bold hover:opacity-80 transition"
         >
           Continue with Google
@@ -148,7 +151,6 @@ export default function Login() {
         >
           Sign Up
         </button>
-
       </form>
     </div>
   );

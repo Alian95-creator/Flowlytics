@@ -7,6 +7,7 @@ interface Commodity {
   symbol: string;
   tvSymbol: string;
   image: string;
+  key: "gold" | "silver" | "oil";
 }
 
 const commodities: Commodity[] = [
@@ -14,49 +15,75 @@ const commodities: Commodity[] = [
     name: "Gold",
     symbol: "XAU/USD",
     tvSymbol: "OANDA:XAUUSD",
-    image: "/commodities/xau.png",
+    image: "/commodities/gold.png",
+    key: "gold",
   },
   {
     name: "Oil",
     symbol: "WTI",
     tvSymbol: "TVC:USOIL",
     image: "/commodities/oil.png",
+    key: "oil",
   },
   {
     name: "Silver",
     symbol: "XAG/USD",
     tvSymbol: "OANDA:XAGUSD",
-    image: "/commodities/xag.png",
+    image: "/commodities/silver.png",
+    key: "silver",
   },
 ];
 
 export default function Commodity() {
   const [selected, setSelected] = useState(commodities[0]);
   const [prices, setPrices] = useState<any>({});
+  const [flash, setFlash] = useState<string | null>(null);
 
-  // 🔥 FETCH REAL PRICE
   useEffect(() => {
     const fetchPrices = async () => {
       try {
         const res = await axios.get("/api/commodities");
         setPrices(res.data);
+
+        // 🔥 trigger flash animation
+        setFlash("active");
+        setTimeout(() => setFlash(null), 300);
       } catch (err) {
         console.error(err);
       }
     };
 
     fetchPrices();
-    const interval = setInterval(fetchPrices, 30000);
+    const interval = setInterval(fetchPrices, 3000);
 
     return () => clearInterval(interval);
   }, []);
 
-  // helper
-  const getPrice = (symbol: string) => {
-    if (symbol.includes("XAU")) return prices.gold;
-    if (symbol.includes("XAG")) return prices.silver;
-    if (symbol.includes("WTI")) return prices.oil;
-    return null;
+  const renderPrice = (key: string) => {
+    const data = prices[key];
+    if (!data) return "Loading...";
+
+    const isUp = parseFloat(data.change) >= 0;
+
+    return (
+      <div className="space-y-1">
+        <p
+          className={`text-lg font-bold transition ${
+            flash === "active" ? "opacity-70" : "opacity-100"
+          }`}
+        >
+          ${data.price}
+        </p>
+
+        <p
+          className={`text-sm flex items-center gap-1 ${
+            isUp ? "text-green-500" : "text-red-500"
+          }`}
+        >
+          {isUp ? "▲" : "▼"} {data.change}%
+        </p>
+      </div>
+    );
   };
 
   return (
@@ -70,38 +97,32 @@ export default function Commodity() {
 
       {/* CARDS */}
       <div className="grid md:grid-cols-3 gap-4">
-        {commodities.map((item) => {
-          const price = getPrice(item.symbol);
-
-          return (
-            <div
-              key={item.symbol}
-              onClick={() => setSelected(item)}
-              className={`p-4 rounded-xl cursor-pointer transition border
-                ${
-                  selected.symbol === item.symbol
-                    ? "border-blue-500 scale-105 shadow-lg shadow-blue-500/20"
-                    : "border-gray-300 dark:border-gray-700 hover:scale-105 hover:shadow-md"
-                }
-                bg-gray-100 dark:bg-gray-900`}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <img
-                  src={item.image}
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = "/logo.png";
-                  }}
-                  className="w-6 h-6"
-                />
-                <h2 className="font-semibold">{item.symbol}</h2>
-              </div>
-
-              <p className="text-lg font-bold">
-                {price ? `$${price}` : "Loading..."}
-              </p>
+        {commodities.map((item) => (
+          <div
+            key={item.symbol}
+            onClick={() => setSelected(item)}
+            className={`p-4 rounded-xl cursor-pointer transition border
+              ${
+                selected.symbol === item.symbol
+                  ? "border-blue-500 scale-105 shadow-lg shadow-blue-500/20"
+                  : "border-gray-300 dark:border-gray-700 hover:scale-105 hover:shadow-md"
+              }
+              bg-gray-100 dark:bg-gray-900`}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <img
+                src={item.image}
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = "/logo.png";
+                }}
+                className="w-6 h-6"
+              />
+              <h2 className="font-semibold">{item.symbol}</h2>
             </div>
-          );
-        })}
+
+            {renderPrice(item.key)}
+          </div>
+        ))}
       </div>
 
       {/* CHART */}

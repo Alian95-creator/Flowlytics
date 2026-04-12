@@ -2,40 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
-/* TRUE DARK MODE */
-html.dark {
-  background-color: #000;
+/* 🌑 TRUE DARK MODE */
+.dark body {
+  background-color: #000000;
+  color: #ffffff;
 }
 
-/* Neon glow helpers */
+/* ⚡ SMOOTH TRANSITION */
+* {
+  transition: all 0.2s ease-in-out;
+}
+
+/* 💀 NEON UTILITIES */
 .neon-green {
   color: #00ff9f;
-  text-shadow: 0 0 8px rgba(0, 255, 159, 0.6);
+  text-shadow: 0 0 5px #00ff9f, 0 0 10px #00ff9f;
 }
 
 .neon-red {
-  color: #ff4d4f;
-  text-shadow: 0 0 8px rgba(255, 77, 79, 0.6);
+  color: #ff4d4d;
+  text-shadow: 0 0 5px #ff4d4d, 0 0 10px #ff4d4d;
 }
 
-/* Card glow */
-.card-dark {
+.neon-border {
+  border: 1px solid #00ff9f;
+  box-shadow: 0 0 10px rgba(0, 255, 159, 0.3);
+}
+
+/* 🧊 CARD STYLE */
+.dark .card-dark {
   background: #000;
   border: 1px solid #111;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.03);
+  box-shadow: 0 0 20px rgba(0, 255, 159, 0.05);
+  border-radius: 16px;
 }
 
-@keyframes slideIn {
-  from {
-    transform: translateX(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.animate-slideIn {
-  animation: slideIn 0.25s ease-out;
+/* 🔥 HOVER EFFECT */
+.hover-glow:hover {
+  box-shadow: 0 0 15px rgba(0, 255, 159, 0.4);
 }

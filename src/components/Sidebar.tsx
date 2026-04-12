@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 export default function Sidebar() {
   return (
-    <div className="w-64 h-full bg-black text-white border-r border-gray-800 p-6">
+    <div className="w-64 h-full bg-black text-white border-r border-green-500/20 p-6">
 
       {/* LOGO */}
       <div className="flex items-center gap-3 mb-8">

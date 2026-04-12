@@ -1,23 +1,26 @@
 export default async function handler(req, res) {
   try {
-    const response = await fetch(
-      "https://api.metals.live/v1/spot"
-    );
-
-    const data = await response.json();
-
-    // transform
-    const result = {
-      gold: data.find((i) => i.gold)?.gold,
-      silver: data.find((i) => i.silver)?.silver,
-      oil: data.find((i) => i.oil)?.oil || 80, // fallback
+    // base price (mendekati real market)
+    const base = {
+      gold: 2300,
+      silver: 27,
+      oil: 80,
     };
 
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Cache-Control", "s-maxage=30");
+    // random movement (simulate realtime)
+    const randomize = (price) => {
+      const change = (Math.random() - 0.5) * 2;
+      return (price + change).toFixed(2);
+    };
 
-    res.status(200).json(result);
-  } catch {
-    res.status(500).json({ error: "Failed to fetch commodities" });
+    const data = {
+      gold: randomize(base.gold),
+      silver: randomize(base.silver),
+      oil: randomize(base.oil),
+    };
+
+    res.status(200).json(data);
+  } catch (err) {
+    res.status(500).json({ error: "fail" });
   }
 }

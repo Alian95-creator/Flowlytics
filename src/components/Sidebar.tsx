@@ -15,7 +15,7 @@ const sections = [
     title: "MARKETS",
     items: [
       { name: "Crypto", path: "/crypto", icon: Bitcoin },
-      { name: "Commodities", path: "/commodity/xauusd", icon: Coins },
+      { name: "Commodities", path: "/commodity", icon: Coins },
       { name: "Forex", path: "/forex", icon: Globe },
     ],
   },
@@ -49,7 +49,8 @@ export default function Sidebar() {
       </div>
 
       {/* MENU */}
-      <div className="flex-1 space-y-6">
+      <div className="flex-1 overflow-y-auto space-y-6 pr-1">
+
         {sections.map((section) => (
           <div key={section.title}>
             <p className="text-xs text-gray-500 mb-2 tracking-wider">
@@ -65,10 +66,10 @@ export default function Sidebar() {
                     key={item.name}
                     to={item.path}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition
+                      `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200
                       ${
                         isActive
-                          ? "bg-green-500/10 text-green-400 neon-green"
+                          ? "bg-green-500/10 text-green-400 shadow-md shadow-green-500/10"
                           : "text-gray-400 hover:bg-white/5 hover:text-white"
                       }`
                     }
@@ -81,38 +82,57 @@ export default function Sidebar() {
             </div>
           </div>
         ))}
+
+        {/* WATCHLIST */}
+        <div>
+          <p className="text-xs text-gray-400 mb-2">WATCHLIST</p>
+
+          <div className="space-y-1 text-sm">
+            <p className="hover:text-green-400 cursor-pointer">BTC</p>
+            <p className="hover:text-green-400 cursor-pointer">ETH</p>
+            <p className="hover:text-green-400 cursor-pointer">XAU</p>
+          </div>
+        </div>
+
+        {/* MARKET STATUS */}
+        <div>
+          <p className="text-xs text-gray-400 mb-2">MARKET STATUS</p>
+
+          <div className="text-sm space-y-1">
+            <p>🟢 Crypto: Bullish</p>
+            <p>🟡 Forex: Neutral</p>
+            <p>🔴 Commodities: Bearish</p>
+          </div>
+        </div>
+
+        {/* QUICK ACCESS */}
+        <div>
+          <p className="text-xs text-gray-400 mb-2">QUICK ACCESS</p>
+
+          <div className="space-y-1 text-sm">
+            <p className="hover:text-blue-400 cursor-pointer">Top Gainers</p>
+            <p className="hover:text-blue-400 cursor-pointer">Top Losers</p>
+            <p className="hover:text-blue-400 cursor-pointer">Market News</p>
+          </div>
+        </div>
+
       </div>
 
-      {/* WATCHLIST */}
-      <div className="mt-6">
-        <p className="text-xs text-gray-400 mb-2">WATCHLIST</p>
+      {/* BOTTOM SECTION */}
+      <div className="mt-6 space-y-3 text-xs text-gray-400">
 
-      <div className="space-y-1 text-sm">
-        <p className="hover:text-green-400 cursor-pointer">BTC</p>
-        <p className="hover:text-green-400 cursor-pointer">ETH</p>
-        <p className="hover:text-green-400 cursor-pointer">XAU</p>
-      </div>
-    </div>
+        {/* SYSTEM STATUS */}
+        <div>
+          <p>System Status</p>
+          <p className="text-green-400">● Connected</p>
+        </div>
 
-{/* MARKET STATUS */}
-<div className="mt-6">
-  <p className="text-xs text-gray-400 mb-2">MARKET STATUS</p>
-
-  <div className="text-sm">
-    <p>🟢 Crypto: Bullish</p>
-    <p>🟡 Forex: Neutral</p>
-    <p>🔴 Commodities: Bearish</p>
-  </div>
-</div>
-
-
-
-      {/* FOOTER STATUS */}
-      <div className="text-xs text-gray-500 mt-6">
-        <div className="flex items-center gap-2">
+        {/* ENGINE */}
+        <div className="flex items-center gap-2 text-gray-500">
           <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
           Realtime Engine
         </div>
+
       </div>
     </div>
   );

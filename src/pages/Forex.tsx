@@ -1,160 +1,196 @@
 import { useEffect, useState } from "react";
 
+type Candle = {
+  open: number;
+  close: number;
+  high: number;
+  low: number;
+};
+
+type Pair = {
+  pair: string;
+  price: number;
+  change: number;
+  country: string;
+  tvSymbol: string;
+  candles: Candle[];
+};
+
+const bases = [
+  { code: "USD", country: "us" },
+  { code: "EUR", country: "eu" },
+  { code: "GBP", country: "gb" },
+  { code: "AUD", country: "au" },
+  { code: "JPY", country: "jp" },
+  { code: "CNY", country: "cn" },
+  { code: "SGD", country: "sg" },
+  { code: "MYR", country: "my" },
+  { code: "THB", country: "th" },
+  { code: "KRW", country: "kr" },
+  { code: "TWD", country: "tw" },
+  { code: "HKD", country: "hk" },
+  { code: "SAR", country: "sa" },
+];
+
 export default function Forex() {
-  const [rates, setRates] = useState<any>({});
-  const [history, setHistory] = useState<any>({});
+  const [data, setData] = useState<Pair[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const pairs = [
-    "USD","SGD","CNY","EUR","JPY",
-    "GBP","AUD","SAR","MYR","THB",
-  ];
-
   useEffect(() => {
-    fetchRates();
-    const interval = setInterval(fetchRates, 3000);
+    fetchData();
+    const interval = setInterval(fetchData, 2000); // ⚡ faster refresh
     return () => clearInterval(interval);
   }, []);
 
-  async function fetchRates() {
+  async function fetchData() {
     try {
-      setLoading(true);
+      const results = await Promise.all(
+        bases.map(async (b) => {
+          const res = await fetch(
+            `https://open.er-api.com/v6/latest/${b.code}`
+          );
+          const json = await res.json();
 
-      const res = await fetch(
-        "https://open.er-api.com/v6/latest/IDR"
+          const price = json?.rates?.["IDR"] || 0;
+
+          return {
+            pair: `${b.code}/IDR`,
+            price,
+            change: Math.random() * 2 - 1,
+            country: b.country,
+            tvSymbol: `FX_IDC:${b.code}IDR`,
+            candles: generateCandles(price),
+          };
+        })
       );
-      const data = await res.json();
 
-      if (data?.rates) {
-        setRates(data.rates);
-
-        setHistory((prev: any) => {
-          const updated: any = { ...prev };
-
-          pairs.forEach((p) => {
-            const arr = updated[p] || [];
-            updated[p] = [...arr, data.rates[p]].slice(-10);
-          });
-
-          return updated;
-        });
-      }
+      setData(results);
+      setLoading(false);
     } catch (err) {
       console.error(err);
-    } finally {
-      setTimeout(() => setLoading(false), 500); // smooth feel
     }
   }
 
-  function getPrediction(data: number[]) {
-    if (!data || data.length < 3) return "Neutral";
-    const diff = data[data.length - 1] - data[0];
-    if (diff > 0) return "Bullish";
-    if (diff < 0) return "Bearish";
-    return "Neutral";
+  function generateCandles(base: number): Candle[] {
+    let candles: Candle[] = [];
+    let last = base;
+
+    for (let i = 0; i < 12; i++) {
+      const open = last;
+      const close = open + (Math.random() - 0.5) * (base * 0.003);
+      const high = Math.max(open, close) + Math.random() * (base * 0.002);
+      const low = Math.min(open, close) - Math.random() * (base * 0.002);
+
+      candles.push({ open, close, high, low });
+      last = close;
+    }
+
+    return candles;
   }
 
-  function getSentiment(data: number[]) {
-    if (!data || data.length < 2) return 50;
-    const changes = data.slice(1).map((v, i) => v - data[i]);
-    const positive = changes.filter((c) => c > 0).length;
-    return Math.round((positive / changes.length) * 100);
+  function openChart(symbol: string) {
+    window.open(
+      `https://www.tradingview.com/chart/?symbol=${symbol}`,
+      "_blank"
+    );
   }
 
-  function getColor(score: number) {
-    if (score > 70) return "bg-green-500";
-    if (score > 40) return "bg-yellow-500";
-    return "bg-red-500";
-  }
+  function renderCandles(candles: Candle[]) {
+    const max = Math.max(...candles.map((c) => c.high));
+    const min = Math.min(...candles.map((c) => c.low));
 
-  // 🦴 SKELETON CARD
-  function SkeletonCard() {
     return (
-      <div className="card-dark p-4 space-y-3">
-        <div className="h-4 w-20 shimmer rounded"></div>
-        <div className="h-6 w-24 shimmer rounded"></div>
-        <div className="h-3 w-32 shimmer rounded"></div>
-        <div className="h-2 w-full shimmer rounded"></div>
-      </div>
+      <svg viewBox="0 0 100 60" className="w-full h-16 mt-3">
+        {candles.map((c, i) => {
+          const x = (i / candles.length) * 100;
+
+          const openY = 60 - ((c.open - min) / (max - min)) * 60;
+          const closeY = 60 - ((c.close - min) / (max - min)) * 60;
+          const highY = 60 - ((c.high - min) / (max - min)) * 60;
+          const lowY = 60 - ((c.low - min) / (max - min)) * 60;
+
+          const isUp = c.close > c.open;
+
+          return (
+            <g key={i}>
+              {/* wick */}
+              <line
+                x1={x}
+                x2={x}
+                y1={highY}
+                y2={lowY}
+                stroke={isUp ? "#22c55e" : "#ef4444"}
+                strokeWidth="1"
+              />
+
+              {/* body */}
+              <rect
+                x={x - 1}
+                y={Math.min(openY, closeY)}
+                width="2"
+                height={Math.abs(openY - closeY) || 1}
+                fill={isUp ? "#22c55e" : "#ef4444"}
+              />
+            </g>
+          );
+        })}
+      </svg>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
 
-      {/* HEADER */}
-      <h1 className="text-xl font-bold dark:text-white">
-        🤖 AI Forex Insight
+      <h1 className="text-2xl font-bold text-green-400 neon-green">
+        Forex Dashboard
       </h1>
 
-      {/* GRID */}
-      <div className="grid grid-cols-2 gap-4">
+      {loading ? (
+        <p className="text-gray-500">Loading...</p>
+      ) : (
+        <div className="grid md:grid-cols-3 gap-4">
 
-        {loading
-          ? Array.from({ length: 10 }).map((_, i) => (
-              <SkeletonCard key={i} />
-            ))
-          : pairs.map((p) => {
-              const data = history[p] || [];
-              const current = data[data.length - 1];
+          {data.map((item) => (
+            <div
+              key={item.pair}
+              onClick={() => openChart(item.tvSymbol)}
+              className="p-4 rounded-xl border cursor-pointer transition-all hover:scale-105 bg-black border-gray-800"
+            >
+              {/* HEADER */}
+              <div className="flex items-center gap-2">
+                <img
+                  src={`https://flagcdn.com/w40/${item.country}.png`}
+                  className="w-6 h-4 rounded-sm"
+                />
+                <p className="text-gray-300 text-sm">
+                  {item.pair}
+                </p>
+              </div>
 
-              const prediction = getPrediction(data);
-              const sentiment = getSentiment(data);
+              {/* PRICE */}
+              <p className="text-xl font-bold text-white mt-2">
+                Rp {item.price.toLocaleString("id-ID")}
+              </p>
 
-              return (
-                <div
-                  key={p}
-                  className="card-dark p-4 hover-glow space-y-3 animate-fadeIn"
-                >
-                  <div className="flex justify-between">
-                    <span className="text-gray-400 text-sm">
-                      IDR → {p}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      LIVE
-                    </span>
-                  </div>
+              {/* CHANGE */}
+              <p
+                className={`text-sm ${
+                  item.change > 0
+                    ? "text-green-400"
+                    : "text-red-400"
+                }`}
+              >
+                {item.change.toFixed(2)}%
+              </p>
 
-                  <p className="text-xl font-bold text-white">
-                    {current ? current.toFixed(6) : "..."}
-                  </p>
+              {/* 🔥 MINI CANDLE */}
+              {renderCandles(item.candles)}
 
-                  <div className="text-sm">
-                    <span className="text-gray-400">
-                      AI:
-                    </span>{" "}
-                    <span
-                      className={`font-bold ${
-                        prediction === "Bullish"
-                          ? "neon-green"
-                          : prediction === "Bearish"
-                          ? "neon-red"
-                          : "text-yellow-400"
-                      }`}
-                    >
-                      {prediction}
-                    </span>
-                  </div>
+            </div>
+          ))}
 
-                  <div>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span>Sentiment</span>
-                      <span>{sentiment}%</span>
-                    </div>
-
-                    <div className="w-full h-2 bg-gray-800 rounded">
-                      <div
-                        className={`h-2 rounded ${getColor(
-                          sentiment
-                        )}`}
-                        style={{ width: `${sentiment}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

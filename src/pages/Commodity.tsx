@@ -6,101 +6,110 @@ interface Commodity {
   symbol: string;
   tvSymbol: string;
   image: string;
+  price: string;
+  change: string;
 }
 
 const commodities: Commodity[] = [
   {
     name: "Gold",
-    symbol: "XAU",
+    symbol: "XAU/USD",
     tvSymbol: "OANDA:XAUUSD",
     image: "https://cryptologos.cc/logos/gold-xau-logo.png",
+    price: "$2,300",
+    change: "+1.2%",
   },
   {
-    name: "Silver",
-    symbol: "XAG",
-    tvSymbol: "OANDA:XAGUSD",
-    image: "https://cryptologos.cc/logos/silver-xag-logo.png",
-  },
-  {
-    name: "Crude Oil",
+    name: "Oil",
     symbol: "WTI",
     tvSymbol: "TVC:USOIL",
     image: "https://cryptologos.cc/logos/oil-logo.png",
+    price: "$82",
+    change: "-0.8%",
   },
   {
-    name: "Natural Gas",
-    symbol: "NG",
-    tvSymbol: "TVC:NATGAS",
-    image: "https://cryptologos.cc/logos/gas-logo.png",
+    name: "Silver",
+    symbol: "XAG/USD",
+    tvSymbol: "OANDA:XAGUSD",
+    image: "https://cryptologos.cc/logos/silver-xag-logo.png",
+    price: "$27",
+    change: "+0.5%",
   },
 ];
 
 export default function Commodity() {
-  const [selected, setSelected] = useState<Commodity>(commodities[0]);
-  const [search, setSearch] = useState("");
-
-  const filtered = commodities.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const [selected, setSelected] = useState(commodities[0]);
 
   return (
-    <div className="flex h-screen">
+    <div className="p-6 min-h-screen">
 
-      {/* LEFT PANEL */}
-      <div className="w-1/3 border-r border-gray-300 dark:border-gray-800 p-4 overflow-y-auto">
+      {/* HEADER */}
+      <h1 className="text-2xl font-bold mb-6">Commodity Dashboard</h1>
 
-        <h1 className="text-xl font-bold mb-4">Commodities</h1>
+      {/* TOP INFO */}
+      <div className="grid md:grid-cols-3 gap-4 mb-6">
 
-        <input
-          type="text"
-          placeholder="Search commodity..."
-          className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-800"
-          onChange={(e) => setSearch(e.target.value)}
-        />
-
-        <div className="space-y-2">
-
-          {filtered.map((item) => (
-            <div
-              key={item.symbol}
-              onClick={() => setSelected(item)}
-              className={`flex items-center justify-between p-3 rounded cursor-pointer transition
-                ${
-                  selected.symbol === item.symbol
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-100 dark:bg-gray-900 hover:scale-[1.02]"
-                }`}
-            >
-              {/* LEFT */}
-              <div className="flex items-center gap-2">
-                <img src={item.image} className="w-5 h-5" />
-                <div>
-                  <p className="text-sm font-semibold">
-                    {item.symbol}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {item.name}
-                  </p>
-                </div>
-              </div>
-
-              {/* RIGHT */}
-              <span className="text-xs text-gray-400">
-                View Chart →
-              </span>
+        {commodities.map((item) => (
+          <div
+            key={item.symbol}
+            onClick={() => setSelected(item)}
+            className={`p-4 rounded-xl cursor-pointer transition border
+              ${
+                selected.symbol === item.symbol
+                  ? "border-blue-500 scale-105"
+                  : "border-gray-300 dark:border-gray-700"
+              }
+              bg-gray-100 dark:bg-gray-900`}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <img src={item.image} className="w-6 h-6" />
+              <h2 className="font-semibold">{item.symbol}</h2>
             </div>
-          ))}
-        </div>
+
+            <p className="text-lg font-bold">{item.price}</p>
+
+            <p
+              className={
+                item.change.includes("+")
+                  ? "text-green-500"
+                  : "text-red-500"
+              }
+            >
+              {item.change}
+            </p>
+          </div>
+        ))}
       </div>
 
-      {/* RIGHT PANEL */}
-      <div className="flex-1 p-4">
+      {/* MAIN */}
+      <div className="grid lg:grid-cols-3 gap-6">
 
-        <h2 className="text-xl font-bold mb-4">
-          {selected.name} Chart
-        </h2>
+        {/* CHART */}
+        <div className="lg:col-span-2 bg-gray-100 dark:bg-gray-900 p-4 rounded-xl">
 
-        <TradingViewChart symbol={selected.tvSymbol} />
+          <h2 className="text-lg font-bold mb-4">
+            {selected.name} Chart
+          </h2>
+
+          <TradingViewChart symbol={selected.tvSymbol} />
+        </div>
+
+        {/* SIDE INFO */}
+        <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-xl">
+
+          <h2 className="font-bold mb-4">Market Insight</h2>
+
+          <p className="text-sm text-gray-500">
+            {selected.name} is showing strong momentum based on recent
+            price action and macroeconomic signals.
+          </p>
+
+          <div className="mt-4 space-y-2">
+            <p>📊 Trend: Bullish</p>
+            <p>🔥 Volatility: Medium</p>
+            <p>💡 Signal: Buy on dips</p>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -83,6 +83,30 @@ export default function Sidebar() {
         ))}
       </div>
 
+      {/* WATCHLIST */}
+      <div className="mt-6">
+        <p className="text-xs text-gray-400 mb-2">WATCHLIST</p>
+
+      <div className="space-y-1 text-sm">
+        <p className="hover:text-green-400 cursor-pointer">BTC</p>
+        <p className="hover:text-green-400 cursor-pointer">ETH</p>
+        <p className="hover:text-green-400 cursor-pointer">XAU</p>
+      </div>
+    </div>
+
+{/* MARKET STATUS */}
+<div className="mt-6">
+  <p className="text-xs text-gray-400 mb-2">MARKET STATUS</p>
+
+  <div className="text-sm">
+    <p>🟢 Crypto: Bullish</p>
+    <p>🟡 Forex: Neutral</p>
+    <p>🔴 Commodities: Bearish</p>
+  </div>
+</div>
+
+
+
       {/* FOOTER STATUS */}
       <div className="text-xs text-gray-500 mt-6">
         <div className="flex items-center gap-2">

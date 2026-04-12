@@ -1,184 +1,215 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
-import TradingViewChart from "../components/TradingViewChart";
 
-interface Coin {
-  id: string;
+type Candle = {
+  open: number;
+  close: number;
+  high: number;
+  low: number;
+};
+
+type Coin = {
   name: string;
   symbol: string;
+  price: number;
+  change: number;
   image: string;
-  current_price: number;
-  price_change_percentage_24h: number;
-}
+  tvSymbol: string;
+  candles: Candle[];
+};
+
+const baseCoins = [
+  {
+    name: "Bitcoin",
+    symbol: "BTC/USDT",
+    price: 65000,
+    tvSymbol: "BINANCE:BTCUSDT",
+    image: "https://cryptologos.cc/logos/bitcoin-btc-logo.png",
+  },
+  {
+    name: "Ethereum",
+    symbol: "ETH/USDT",
+    price: 3200,
+    tvSymbol: "BINANCE:ETHUSDT",
+    image: "https://cryptologos.cc/logos/ethereum-eth-logo.png",
+  },
+  {
+    name: "Solana",
+    symbol: "SOL/USDT",
+    price: 150,
+    tvSymbol: "BINANCE:SOLUSDT",
+    image: "https://cryptologos.cc/logos/solana-sol-logo.png",
+  },
+  {
+    name: "BNB",
+    symbol: "BNB/USDT",
+    price: 600,
+    tvSymbol: "BINANCE:BNBUSDT",
+    image: "https://cryptologos.cc/logos/bnb-bnb-logo.png",
+  },
+  {
+    name: "XRP",
+    symbol: "XRP/USDT",
+    price: 0.6,
+    tvSymbol: "BINANCE:XRPUSDT",
+    image: "https://cryptologos.cc/logos/xrp-xrp-logo.png",
+  },
+  {
+    name: "Dogecoin",
+    symbol: "DOGE/USDT",
+    price: 0.15,
+    tvSymbol: "BINANCE:DOGEUSDT",
+    image: "https://cryptologos.cc/logos/dogecoin-doge-logo.png",
+  },
+];
 
 export default function Crypto() {
-  const [coins, setCoins] = useState<Coin[]>([]);
-  const [search, setSearch] = useState("");
-  const [selectedCoinId, setSelectedCoinId] = useState<string | null>(null);
-  const [watchlist, setWatchlist] = useState<string[]>([]);
-  const [prices, setPrices] = useState<Record<string, number>>({});
+  const [data, setData] = useState<Coin[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // ⭐ LOAD WATCHLIST
   useEffect(() => {
-    const saved = localStorage.getItem("watchlist");
-    if (saved) setWatchlist(JSON.parse(saved));
+    generateData();
+    const interval = setInterval(generateData, 2000);
+    return () => clearInterval(interval);
   }, []);
 
-  // ⭐ SAVE WATCHLIST
-  useEffect(() => {
-    localStorage.setItem("watchlist", JSON.stringify(watchlist));
-  }, [watchlist]);
+  function generateData() {
+    const results = baseCoins.map((coin) => {
+      const change = Math.random() * 2 - 1;
+      const newPrice = coin.price + change * coin.price * 0.01;
 
-  // 🔥 FETCH COINS (VIA VERCEL API)
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await axios.get("/api/crypto");
-        setCoins(res.data);
+      return {
+        ...coin,
+        price: newPrice,
+        change,
+        candles: generateCandles(newPrice),
+      };
+    });
 
-        if (!selectedCoinId && res.data.length > 0) {
-          setSelectedCoinId(res.data[0].id);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
+    setData(results);
+    setLoading(false);
+  }
 
-    fetchData();
-  }, [selectedCoinId]);
+  function generateCandles(base: number): Candle[] {
+    let candles: Candle[] = [];
+    let last = base;
 
-  // ⚡ REALTIME PRICE (BINANCE WEBSOCKET)
-  useEffect(() => {
-    const ws = new WebSocket(
-      "wss://stream.binance.com:9443/ws/!miniTicker@arr"
+    for (let i = 0; i < 12; i++) {
+      const open = last;
+      const close = open + (Math.random() - 0.5) * (base * 0.003);
+      const high = Math.max(open, close) + Math.random() * (base * 0.002);
+      const low = Math.min(open, close) - Math.random() * (base * 0.002);
+
+      candles.push({ open, close, high, low });
+      last = close;
+    }
+
+    return candles;
+  }
+
+  function openChart(symbol: string) {
+    window.open(
+      `https://www.tradingview.com/chart/?symbol=${symbol}`,
+      "_blank"
     );
+  }
 
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+  function renderCandles(candles: Candle[]) {
+    const max = Math.max(...candles.map((c) => c.high));
+    const min = Math.min(...candles.map((c) => c.low));
 
-      const updated: Record<string, number> = {};
+    return (
+      <svg viewBox="0 0 100 60" className="w-full h-16 mt-3">
+        {candles.map((c, i) => {
+          const x = (i / candles.length) * 100;
 
-      data.forEach((coin: any) => {
-        const symbol = coin.s.replace("USDT", "").toLowerCase();
-        updated[symbol] = parseFloat(coin.c);
-      });
+          const openY = 60 - ((c.open - min) / (max - min)) * 60;
+          const closeY = 60 - ((c.close - min) / (max - min)) * 60;
+          const highY = 60 - ((c.high - min) / (max - min)) * 60;
+          const lowY = 60 - ((c.low - min) / (max - min)) * 60;
 
-      setPrices(updated);
-    };
+          const isUp = c.close > c.open;
 
-    return () => ws.close();
-  }, []);
+          return (
+            <g key={i}>
+              <line
+                x1={x}
+                x2={x}
+                y1={highY}
+                y2={lowY}
+                stroke={isUp ? "#22c55e" : "#ef4444"}
+                strokeWidth="1"
+              />
 
-  // 🔍 FILTER
-  const filteredCoins = coins.filter((coin) =>
-    coin.name.toLowerCase().includes(search.toLowerCase())
-  );
-
-  // 🔥 SELECTED COIN
-  const selectedCoin = coins.find((c) => c.id === selectedCoinId);
-
-  // ⭐ TOGGLE WATCHLIST
-  const toggleWatchlist = (id: string) => {
-    setWatchlist((prev) =>
-      prev.includes(id)
-        ? prev.filter((c) => c !== id)
-        : [...prev, id]
+              <rect
+                x={x - 1}
+                y={Math.min(openY, closeY)}
+                width="2"
+                height={Math.abs(openY - closeY) || 1}
+                fill={isUp ? "#22c55e" : "#ef4444"}
+              />
+            </g>
+          );
+        })}
+      </svg>
     );
-  };
+  }
 
   return (
-    <div className="flex h-screen">
+    <div className="space-y-6">
 
-      {/* LEFT PANEL */}
-      <div className="w-1/3 border-r border-gray-300 dark:border-gray-800 p-4 overflow-y-auto">
+      <h1 className="text-2xl font-bold text-green-400 neon-green">
+        Crypto Dashboard
+      </h1>
 
-        <h1 className="text-xl font-bold mb-4">Markets</h1>
+      {loading ? (
+        <p className="text-gray-500">Loading...</p>
+      ) : (
+        <div className="grid md:grid-cols-3 gap-4">
 
-        <input
-          type="text"
-          placeholder="Search coin..."
-          className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-800"
-          onChange={(e) => setSearch(e.target.value)}
-        />
-
-        <div className="space-y-2">
-
-          {filteredCoins.map((coin) => {
-            const livePrice =
-              prices[coin.symbol] ?? coin.current_price;
-
-            return (
-              <div
-                key={coin.id}
-                onClick={() => setSelectedCoinId(coin.id)}
-                className={`flex items-center justify-between p-3 rounded cursor-pointer transition
-                  ${
-                    selectedCoinId === coin.id
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-100 dark:bg-gray-900 hover:scale-[1.02]"
-                  }`}
-              >
-                {/* LEFT */}
-                <div className="flex items-center gap-2">
-                  <img src={coin.image} className="w-5 h-5" />
-                  <div>
-                    <p className="text-sm font-semibold">
-                      {coin.symbol.toUpperCase()}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {coin.name}
-                    </p>
-                  </div>
-                </div>
-
-                {/* PRICE */}
-                <div className="text-right">
-                  <p className="text-sm">
-                    ${livePrice.toLocaleString()}
-                  </p>
-
-                  <p
-                    className={
-                      coin.price_change_percentage_24h > 0
-                        ? "text-green-500 text-xs"
-                        : "text-red-500 text-xs"
-                    }
-                  >
-                    {coin.price_change_percentage_24h?.toFixed(2)}%
-                  </p>
-                </div>
-
-                {/* ⭐ WATCHLIST */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleWatchlist(coin.id);
+          {data.map((coin) => (
+            <div
+              key={coin.symbol}
+              onClick={() => openChart(coin.tvSymbol)}
+              className="p-4 rounded-xl border cursor-pointer transition-all hover:scale-105 bg-black border-gray-800"
+            >
+              {/* HEADER */}
+              <div className="flex items-center gap-2">
+                <img
+                  src={coin.image}
+                  className="w-6 h-6"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = "/logo.png";
                   }}
-                  className="ml-2"
-                >
-                  {watchlist.includes(coin.id) ? "⭐" : "☆"}
-                </button>
+                />
+                <p className="text-gray-300 text-sm">
+                  {coin.symbol}
+                </p>
               </div>
-            );
-          })}
+
+              {/* PRICE */}
+              <p className="text-xl font-bold text-white mt-2">
+                ${coin.price.toFixed(2)}
+              </p>
+
+              {/* CHANGE */}
+              <p
+                className={`text-sm ${
+                  coin.change > 0
+                    ? "text-green-400"
+                    : "text-red-400"
+                }`}
+              >
+                {coin.change.toFixed(2)}%
+              </p>
+
+              {/* MINI CANDLE */}
+              {renderCandles(coin.candles)}
+
+            </div>
+          ))}
+
         </div>
-      </div>
-
-      {/* RIGHT PANEL */}
-      <div className="flex-1 p-4">
-
-        {selectedCoin && (
-          <>
-            <h2 className="text-xl font-bold mb-4">
-              {selectedCoin.name} / USDT
-            </h2>
-
-            <TradingViewChart
-              symbol={selectedCoin.symbol.toUpperCase()}
-            />
-          </>
-        )}
-      </div>
+      )}
     </div>
   );
 }

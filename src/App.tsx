@@ -36,7 +36,7 @@ export default function App() {
         </div>
       )}
 
-      {/* MAIN AREA */}
+      {/* MAIN */}
       <div className="flex-1 flex flex-col">
 
         {/* HEADER */}

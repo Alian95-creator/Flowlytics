@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import TradingViewChart from "../components/TradingViewChart";
 
 type Coin = {
   id: string;
@@ -23,48 +24,68 @@ export default function Crypto() {
   const [loading, setLoading] = useState(true);
   const [global, setGlobal] = useState<GlobalData | null>(null);
 
+  const [selectedCoin, setSelectedCoin] = useState<Coin | null>(null);
+
+  // INIT
   useEffect(() => {
     fetchCoins();
     fetchGlobal();
   }, []);
 
+  // FILTER
   useEffect(() => {
-    const f = coins.filter(
-      (c) =>
-        c.name.toLowerCase().includes(search.toLowerCase()) ||
-        c.symbol.toLowerCase().includes(search.toLowerCase())
+    const q = search.toLowerCase();
+
+    setFiltered(
+      coins.filter(
+        (c) =>
+          c.name?.toLowerCase().includes(q) ||
+          c.symbol?.toLowerCase().includes(q)
+      )
     );
-    setFiltered(f);
   }, [search, coins]);
 
+  // FETCH COINS
   async function fetchCoins() {
     try {
+      setLoading(true);
+
       const res = await fetch(
-        "https://api.allorigins.win/raw?url=" +
-          encodeURIComponent(
-            "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1"
-          )
+        "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1"
       );
 
       const data = await res.json();
-      setCoins(data);
-      setFiltered(data);
-      setLoading(false);
+
+      if (!Array.isArray(data)) return;
+
+      const safe = data.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        symbol: c.symbol,
+        current_price: c.current_price,
+        image: c.image,
+        price_change_percentage_24h: c.price_change_percentage_24h,
+        total_volume: c.total_volume,
+      }));
+
+      setCoins(safe);
+      setFiltered(safe);
     } catch (err) {
-      console.error("coins error", err);
+      console.error(err);
+    } finally {
       setLoading(false);
     }
   }
 
+  // GLOBAL
   async function fetchGlobal() {
     try {
-      const res = await fetch(
-        "https://api.allorigins.win/raw?url=" +
-          encodeURIComponent("https://api.coingecko.com/api/v3/global")
-      );
-
+      const res = await fetch("https://api.coingecko.com/api/v3/global");
       const json = await res.json();
-      const data = json.data;
+
+      const data = json?.data;
+
+      if (!data) return;
 
       setGlobal({
         btcDominance: data.market_cap_percentage.btc,
@@ -72,27 +93,65 @@ export default function Crypto() {
         totalVolume: data.total_volume.usd,
       });
     } catch (err) {
-      console.error("global error", err);
+      console.error(err);
     }
   }
 
+  // REALTIME PRICE ONLY
+  async function refreshPrices() {
+    try {
+      const res = await fetch(
+        "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1"
+      );
+
+      const data = await res.json();
+      if (!Array.isArray(data)) return;
+
+      setCoins((prev) =>
+        prev.map((coin) => {
+          const updated = data.find((c: any) => c.id === coin.id);
+          if (!updated) return coin;
+
+          return {
+            ...coin,
+            current_price: updated.current_price,
+            price_change_percentage_24h:
+              updated.price_change_percentage_24h,
+            total_volume: updated.total_volume,
+          };
+        })
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  useEffect(() => {
+    const interval = setInterval(refreshPrices, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
   function formatPrice(p: number) {
-    return `$${p.toLocaleString()}`;
+    return `$${Number(p || 0).toLocaleString()}`;
   }
 
   function getSummary() {
     if (!coins.length || !global) return null;
 
     const sortedGain = [...coins].sort(
-      (a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h
+      (a, b) =>
+        (b.price_change_percentage_24h || 0) -
+        (a.price_change_percentage_24h || 0)
     );
 
     const sortedLoss = [...coins].sort(
-      (a, b) => a.price_change_percentage_24h - b.price_change_percentage_24h
+      (a, b) =>
+        (a.price_change_percentage_24h || 0) -
+        (b.price_change_percentage_24h || 0)
     );
 
     const sortedVolume = [...coins].sort(
-      (a, b) => b.total_volume - a.total_volume
+      (a, b) => (b.total_volume || 0) - (a.total_volume || 0)
     );
 
     return {
@@ -103,49 +162,7 @@ export default function Crypto() {
     };
   }
 
-  // 🔥 AI INSIGHT ENGINE
-  function getAIInsight(summary: any, global: any) {
-    if (!summary || !global) return [];
-
-    const insights: string[] = [];
-
-    if (global.btcDominance > 50) {
-      insights.push(
-        "BTC dominance tinggi → altcoin cenderung melemah (market risk-off)."
-      );
-    } else {
-      insights.push(
-        "BTC dominance turun → altcoin mulai kuat (bullish rotation)."
-      );
-    }
-
-    if (summary.topGainer.price_change_percentage_24h > 5) {
-      insights.push(
-        `${summary.topGainer.symbol.toUpperCase()} sedang naik tajam → indikasi breakout / hype.`
-      );
-    }
-
-    if (summary.topLoser.price_change_percentage_24h < -5) {
-      insights.push(
-        `${summary.topLoser.symbol.toUpperCase()} turun dalam → potensi panic sell.`
-      );
-    }
-
-    if (summary.mostActive.total_volume > 1_000_000_000) {
-      insights.push(
-        `${summary.mostActive.symbol.toUpperCase()} volume tinggi → aktivitas trader meningkat.`
-      );
-    }
-
-    if (insights.length === 0) {
-      insights.push("Market relatif stabil tanpa sinyal ekstrem.");
-    }
-
-    return insights;
-  }
-
   const summary = getSummary();
-  const aiInsights = getAIInsight(summary, global);
 
   return (
     <div className="space-y-6 text-white">
@@ -153,9 +170,18 @@ export default function Crypto() {
       {/* HEADER */}
       <div>
         <h1 className="text-2xl font-bold">Crypto Market</h1>
-        <p className="text-sm text-gray-500">
-          Real-time market overview & AI insights
-        </p>
+        <p className="text-sm text-gray-500">Live market overview</p>
+      </div>
+
+      {/* SEARCH */}
+      <div className="card-dark flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-800">
+        <span className="text-gray-500">🔍</span>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search coin..."
+          className="w-full bg-transparent outline-none text-sm"
+        />
       </div>
 
       {/* SUMMARY */}
@@ -172,14 +198,14 @@ export default function Crypto() {
           <div className="card-dark p-4 rounded-xl border border-gray-800">
             <p className="text-xs text-gray-500">Top Gainer</p>
             <p className="text-green-400 font-bold">
-              {summary.topGainer.symbol.toUpperCase()} +{summary.topGainer.price_change_percentage_24h.toFixed(2)}%
+              {summary.topGainer?.symbol?.toUpperCase()}
             </p>
           </div>
 
           <div className="card-dark p-4 rounded-xl border border-gray-800">
             <p className="text-xs text-gray-500">Top Loser</p>
             <p className="text-red-400 font-bold">
-              {summary.topLoser.symbol.toUpperCase()} {summary.topLoser.price_change_percentage_24h.toFixed(2)}%
+              {summary.topLoser?.symbol?.toUpperCase()}
             </p>
           </div>
 
@@ -191,34 +217,6 @@ export default function Crypto() {
         </div>
       )}
 
-      {/* 🔥 AI INSIGHT */}
-      {aiInsights && (
-        <div className="card-dark p-4 rounded-xl border border-gray-800 space-y-2">
-
-          <h2 className="text-purple-400 font-bold">
-            🤖 AI Market Insight
-          </h2>
-
-          <ul className="space-y-1 text-sm text-gray-300">
-            {aiInsights.map((text, i) => (
-              <li key={i}>• {text}</li>
-            ))}
-          </ul>
-
-        </div>
-      )}
-
-      {/* SEARCH */}
-      <div className="card-dark flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-800">
-        <span className="text-gray-500">🔍</span>
-        <input
-          placeholder="Search coin..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-transparent outline-none text-sm"
-        />
-      </div>
-
       {/* LIST */}
       <div className="card-dark rounded-2xl border border-gray-800 overflow-hidden">
 
@@ -229,15 +227,16 @@ export default function Crypto() {
         </div>
 
         {loading ? (
-          <p className="text-gray-500 p-4">Loading...</p>
+          <p className="p-4 text-gray-500">Loading...</p>
         ) : (
           filtered.map((c) => {
-            const change = c.price_change_percentage_24h;
+            const change = c.price_change_percentage_24h || 0;
 
             return (
               <div
                 key={c.id}
-                className="grid grid-cols-3 items-center px-3 py-4 border-b border-gray-900 hover:bg-white/5 transition"
+                onClick={() => setSelectedCoin(c)}
+                className="grid grid-cols-3 items-center px-3 py-4 border-b border-gray-900 hover:bg-white/5 transition cursor-pointer"
               >
 
                 <div className="flex items-center gap-3">
@@ -246,9 +245,7 @@ export default function Crypto() {
                     <p className="text-sm font-semibold">
                       {c.symbol.toUpperCase()}
                     </p>
-                    <p className="text-xs text-gray-500">
-                      {c.name}
-                    </p>
+                    <p className="text-xs text-gray-500">{c.name}</p>
                   </div>
                 </div>
 
@@ -271,6 +268,33 @@ export default function Crypto() {
         )}
 
       </div>
+
+      {/* 🚀 TRADINGVIEW MODAL */}
+      {selectedCoin && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+          onClick={() => setSelectedCoin(null)}
+        >
+          <div
+            className="w-[95%] md:w-[85%] h-[85%] bg-black border border-gray-800 rounded-xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+
+            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800">
+              <h2 className="font-bold">
+                {selectedCoin.symbol.toUpperCase()} / USDT
+              </h2>
+
+              <button onClick={() => setSelectedCoin(null)}>
+                ✕
+              </button>
+            </div>
+
+            <TradingViewChart symbol={selectedCoin.symbol} />
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

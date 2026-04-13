@@ -36,7 +36,7 @@ export default function App() {
         </div>
       )}
 
-      {/* MAIN */}
+      {/* MAIN AREA */}
       <div className="flex-1 flex flex-col">
 
         {/* HEADER */}
@@ -46,7 +46,7 @@ export default function App() {
         <div className="p-4 flex-1 pb-20">
 
           <Routes>
-            <Route path="/" element={<Navigate to="/crypto" />} />
+            <Route path="/" element={<Navigate to="/login" />} />
             <Route path="/crypto" element={<Crypto />} />
             <Route path="/commodity" element={<Commodity />} />
             <Route path="/forex" element={<Forex />} />

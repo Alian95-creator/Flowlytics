@@ -1,182 +1,276 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
-
-type Candle = {
-  open: number;
-  close: number;
-  high: number;
-  low: number;
-};
 
 type Coin = {
   id: string;
   name: string;
   symbol: string;
-  image: string;
   current_price: number;
+  image: string;
   price_change_percentage_24h: number;
-  candles: Candle[];
+  total_volume: number;
+};
+
+type GlobalData = {
+  btcDominance: number;
+  totalMarketCap: number;
+  totalVolume: number;
 };
 
 export default function Crypto() {
-  const [data, setData] = useState<Coin[]>([]);
+  const [coins, setCoins] = useState<Coin[]>([]);
+  const [filtered, setFiltered] = useState<Coin[]>([]);
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [global, setGlobal] = useState<GlobalData | null>(null);
 
   useEffect(() => {
-    fetchData();
-
-    const interval = setInterval(fetchData, 10000); // 🔥 10 detik (aman, gak spam API)
-    return () => clearInterval(interval);
+    fetchCoins();
+    fetchGlobal();
   }, []);
 
-  async function fetchData() {
+  useEffect(() => {
+    const f = coins.filter(
+      (c) =>
+        c.name.toLowerCase().includes(search.toLowerCase()) ||
+        c.symbol.toLowerCase().includes(search.toLowerCase())
+    );
+    setFiltered(f);
+  }, [search, coins]);
+
+  async function fetchCoins() {
     try {
-      const res = await axios.get(
-        "https://api.coingecko.com/api/v3/coins/markets",
-        {
-          params: {
-            vs_currency: "usd",
-            order: "market_cap_desc",
-            per_page: 100,
-            page: 1,
-          },
-        }
+      const res = await fetch(
+        "https://api.allorigins.win/raw?url=" +
+          encodeURIComponent(
+            "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1"
+          )
       );
 
-      const coins = res.data.map((coin: any) => ({
-        ...coin,
-        candles: generateCandles(coin.current_price),
-      }));
-
-      setData(coins);
+      const data = await res.json();
+      setCoins(data);
+      setFiltered(data);
       setLoading(false);
     } catch (err) {
-      console.error("Fetch error:", err);
+      console.error("coins error", err);
+      setLoading(false);
     }
   }
 
-  function generateCandles(base: number): Candle[] {
-    let candles: Candle[] = [];
-    let last = base;
+  async function fetchGlobal() {
+    try {
+      const res = await fetch(
+        "https://api.allorigins.win/raw?url=" +
+          encodeURIComponent("https://api.coingecko.com/api/v3/global")
+      );
 
-    for (let i = 0; i < 12; i++) {
-      const open = last;
-      const close = open + (Math.random() - 0.5) * (base * 0.002);
-      const high = Math.max(open, close) + Math.random() * (base * 0.001);
-      const low = Math.min(open, close) - Math.random() * (base * 0.001);
+      const json = await res.json();
+      const data = json.data;
 
-      candles.push({ open, close, high, low });
-      last = close;
+      setGlobal({
+        btcDominance: data.market_cap_percentage.btc,
+        totalMarketCap: data.total_market_cap.usd,
+        totalVolume: data.total_volume.usd,
+      });
+    } catch (err) {
+      console.error("global error", err);
+    }
+  }
+
+  function formatPrice(p: number) {
+    return `$${p.toLocaleString()}`;
+  }
+
+  function getSummary() {
+    if (!coins.length || !global) return null;
+
+    const sortedGain = [...coins].sort(
+      (a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h
+    );
+
+    const sortedLoss = [...coins].sort(
+      (a, b) => a.price_change_percentage_24h - b.price_change_percentage_24h
+    );
+
+    const sortedVolume = [...coins].sort(
+      (a, b) => b.total_volume - a.total_volume
+    );
+
+    return {
+      topGainer: sortedGain[0],
+      topLoser: sortedLoss[0],
+      mostActive: sortedVolume[0],
+      sentiment: global.btcDominance > 50 ? "Bearish 🔴" : "Bullish 🟢",
+    };
+  }
+
+  // 🔥 AI INSIGHT ENGINE
+  function getAIInsight(summary: any, global: any) {
+    if (!summary || !global) return [];
+
+    const insights: string[] = [];
+
+    if (global.btcDominance > 50) {
+      insights.push(
+        "BTC dominance tinggi → altcoin cenderung melemah (market risk-off)."
+      );
+    } else {
+      insights.push(
+        "BTC dominance turun → altcoin mulai kuat (bullish rotation)."
+      );
     }
 
-    return candles;
+    if (summary.topGainer.price_change_percentage_24h > 5) {
+      insights.push(
+        `${summary.topGainer.symbol.toUpperCase()} sedang naik tajam → indikasi breakout / hype.`
+      );
+    }
+
+    if (summary.topLoser.price_change_percentage_24h < -5) {
+      insights.push(
+        `${summary.topLoser.symbol.toUpperCase()} turun dalam → potensi panic sell.`
+      );
+    }
+
+    if (summary.mostActive.total_volume > 1_000_000_000) {
+      insights.push(
+        `${summary.mostActive.symbol.toUpperCase()} volume tinggi → aktivitas trader meningkat.`
+      );
+    }
+
+    if (insights.length === 0) {
+      insights.push("Market relatif stabil tanpa sinyal ekstrem.");
+    }
+
+    return insights;
   }
 
-  function openChart(symbol: string) {
-    const clean = symbol.toUpperCase() + "USDT";
-
-    window.open(
-      `https://www.tradingview.com/chart/?symbol=BINANCE:${clean}`,
-      "_blank"
-    );
-  }
-
-  function renderCandles(candles: Candle[]) {
-    const max = Math.max(...candles.map((c) => c.high));
-    const min = Math.min(...candles.map((c) => c.low));
-
-    return (
-      <svg viewBox="0 0 100 60" className="w-full h-16 mt-3">
-        {candles.map((c, i) => {
-          const x = (i / candles.length) * 100;
-
-          const openY = 60 - ((c.open - min) / (max - min)) * 60;
-          const closeY = 60 - ((c.close - min) / (max - min)) * 60;
-          const highY = 60 - ((c.high - min) / (max - min)) * 60;
-          const lowY = 60 - ((c.low - min) / (max - min)) * 60;
-
-          const isUp = c.close > c.open;
-
-          return (
-            <g key={i}>
-              <line
-                x1={x}
-                x2={x}
-                y1={highY}
-                y2={lowY}
-                stroke={isUp ? "#22c55e" : "#ef4444"}
-                strokeWidth="1"
-              />
-              <rect
-                x={x - 1}
-                y={Math.min(openY, closeY)}
-                width="2"
-                height={Math.abs(openY - closeY) || 1}
-                fill={isUp ? "#22c55e" : "#ef4444"}
-              />
-            </g>
-          );
-        })}
-      </svg>
-    );
-  }
+  const summary = getSummary();
+  const aiInsights = getAIInsight(summary, global);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-white">
 
-      <h1 className="text-2xl font-bold text-green-400 neon-green">
-        Crypto Market (Top 100)
-      </h1>
+      {/* HEADER */}
+      <div>
+        <h1 className="text-2xl font-bold">Crypto Market</h1>
+        <p className="text-sm text-gray-500">
+          Real-time market overview & AI insights
+        </p>
+      </div>
 
-      {loading ? (
-        <p className="text-gray-500">Loading market...</p>
-      ) : (
-        <div className="grid md:grid-cols-3 gap-4">
+      {/* SUMMARY */}
+      {global && summary && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
 
-          {data.map((coin) => (
-            <div
-              key={coin.id}
-              onClick={() => openChart(coin.symbol)}
-              className="p-4 rounded-xl border cursor-pointer transition-all hover:scale-105 bg-black border-gray-800"
-            >
-              {/* HEADER */}
-              <div className="flex items-center gap-2">
-                <img
-                  src={coin.image}
-                  className="w-6 h-6"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = "/logo.png";
-                  }}
-                />
-                <p className="text-gray-300 text-sm uppercase">
-                  {coin.symbol}/USDT
-                </p>
-              </div>
+          <div className="card-dark p-4 rounded-xl border border-gray-800">
+            <p className="text-xs text-gray-500">BTC Dominance</p>
+            <p className="text-lg font-bold">
+              {global.btcDominance.toFixed(2)}%
+            </p>
+          </div>
 
-              {/* PRICE */}
-              <p className="text-xl font-bold text-white mt-2">
-                ${coin.current_price.toLocaleString()}
-              </p>
+          <div className="card-dark p-4 rounded-xl border border-gray-800">
+            <p className="text-xs text-gray-500">Top Gainer</p>
+            <p className="text-green-400 font-bold">
+              {summary.topGainer.symbol.toUpperCase()} +{summary.topGainer.price_change_percentage_24h.toFixed(2)}%
+            </p>
+          </div>
 
-              {/* CHANGE */}
-              <p
-                className={`text-sm ${
-                  coin.price_change_percentage_24h > 0
-                    ? "text-green-400"
-                    : "text-red-400"
-                }`}
-              >
-                {coin.price_change_percentage_24h?.toFixed(2)}%
-              </p>
+          <div className="card-dark p-4 rounded-xl border border-gray-800">
+            <p className="text-xs text-gray-500">Top Loser</p>
+            <p className="text-red-400 font-bold">
+              {summary.topLoser.symbol.toUpperCase()} {summary.topLoser.price_change_percentage_24h.toFixed(2)}%
+            </p>
+          </div>
 
-              {/* MINI CANDLE */}
-              {renderCandles(coin.candles)}
-
-            </div>
-          ))}
+          <div className="card-dark p-4 rounded-xl border border-gray-800">
+            <p className="text-xs text-gray-500">Sentiment</p>
+            <p className="font-bold">{summary.sentiment}</p>
+          </div>
 
         </div>
       )}
+
+      {/* 🔥 AI INSIGHT */}
+      {aiInsights && (
+        <div className="card-dark p-4 rounded-xl border border-gray-800 space-y-2">
+
+          <h2 className="text-purple-400 font-bold">
+            🤖 AI Market Insight
+          </h2>
+
+          <ul className="space-y-1 text-sm text-gray-300">
+            {aiInsights.map((text, i) => (
+              <li key={i}>• {text}</li>
+            ))}
+          </ul>
+
+        </div>
+      )}
+
+      {/* SEARCH */}
+      <div className="card-dark flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-800">
+        <span className="text-gray-500">🔍</span>
+        <input
+          placeholder="Search coin..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full bg-transparent outline-none text-sm"
+        />
+      </div>
+
+      {/* LIST */}
+      <div className="card-dark rounded-2xl border border-gray-800 overflow-hidden">
+
+        <div className="grid grid-cols-3 p-3 text-xs text-gray-500 border-b border-gray-800">
+          <span>Asset</span>
+          <span className="text-center">Price</span>
+          <span className="text-right">24h</span>
+        </div>
+
+        {loading ? (
+          <p className="text-gray-500 p-4">Loading...</p>
+        ) : (
+          filtered.map((c) => {
+            const change = c.price_change_percentage_24h;
+
+            return (
+              <div
+                key={c.id}
+                className="grid grid-cols-3 items-center px-3 py-4 border-b border-gray-900 hover:bg-white/5 transition"
+              >
+
+                <div className="flex items-center gap-3">
+                  <img src={c.image} className="w-6 h-6 rounded-full" />
+                  <div>
+                    <p className="text-sm font-semibold">
+                      {c.symbol.toUpperCase()}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {c.name}
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-center text-sm font-semibold">
+                  {formatPrice(c.current_price)}
+                </p>
+
+                <p
+                  className={`text-right text-sm font-bold ${
+                    change >= 0 ? "text-green-400" : "text-red-400"
+                  }`}
+                >
+                  {change >= 0 ? "+" : ""}
+                  {change.toFixed(2)}%
+                </p>
+
+              </div>
+            );
+          })
+        )}
+
+      </div>
     </div>
   );
 }

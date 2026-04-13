@@ -36,7 +36,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-black text-white">
+      <div className="flex items-center justify-center h-screen bg-white dark:bg-black text-black dark:text-white">
         Loading...
       </div>
     );
@@ -59,7 +59,7 @@ export default function App() {
 
   return (
     <div
-      className="flex min-h-screen bg-black"
+      className="flex min-h-screen bg-white dark:bg-black text-black dark:text-white transition-colors duration-300"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -69,7 +69,7 @@ export default function App() {
 
       {open && (
         <div
-          className="fixed inset-0 z-50 bg-black/80 md:hidden"
+          className="fixed inset-0 z-50 bg-black/80 dark:bg-black/80 md:hidden"
           onClick={() => setOpen(false)}
         >
           <div
@@ -84,7 +84,7 @@ export default function App() {
       <div className="flex-1 flex flex-col">
         <Header onMenuClick={() => setOpen(true)} />
 
-        <div className="p-4 flex-1 pb-20">
+        <div className="p-4 flex-1 pb-20 bg-white dark:bg-black transition">
           <Routes>
             <Route path="/" element={<Navigate to="/crypto" />} />
             <Route path="/crypto" element={<Crypto />} />
